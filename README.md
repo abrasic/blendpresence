@@ -1,13 +1,10 @@
 # BlendPresence
 A personalized Blender plugin fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
 
+BlendPresence shows off what you're doing in blender using Discord Rich Presence. It shows various statistics including app version, .blend file name and the mode you're currently using. While rendering, it can display what frame you're currently rendering and what render engine you're using.
+
 ![Example 1](https://abrasic.com/assets/img/bp1.png)
 ![Example 2](https://abrasic.com/assets/img/bp2.png)
-
-## Features
-**Active Mode**: Displays your current active mode in the small image. Currenly supported modes are object, edit, pose, draw, sculpt, particle edit, texture paint, vertex paint and weight paint.
-**Render Stats**: While rendering, it will display stats such as render engine and what frames you're rendering.
-**Personalization**: Don't want people seeing your file name or active mode? We can hide that for you.
 
 ## Installation
 1. Download the latest version in releases. DO NOT UNZIP
