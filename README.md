@@ -12,7 +12,7 @@ BlendPresence shows off what you're doing in blender using Discord Rich Presence
 3. Enable the plugin and manage settings as such.
 
 ## Customizable Options
-**Display file name**: Displays .blend file name.
-**Display elapsed time**: Displays time elapsed.
-**Reset elapsed time on next action**: If enabled, the timer will reset when switching between edit/render modes.
-**Display active mode**: Displays active mode.
+-**Display file name**: Displays .blend file name.
+-**Display elapsed time**: Displays time elapsed.
+-**Reset elapsed time on next action**: If enabled, the timer will reset when switching between edit/render modes.
+-**Display active mode**: Displays active mode.
