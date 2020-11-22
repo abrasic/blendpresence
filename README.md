@@ -10,9 +10,11 @@ BlendPresence is a blender plugin that shows off what you're doing in blender us
 1. Download the latest version in releases. DO NOT UNZIP
 2. In blender go to Edit > Preferences > Addons > Install and select the downloaded zip file.
 3. Enable the plugin and manage settings as such.
+Make sure in your **User Settings > Game Activity** you have *Display currently running game as a status message* enabled, otherwise it won't show in Discord.
 
 ## Customizable Options
 - **Display file name**: Displays .blend file name.
 - **Display elapsed time**: Displays time elapsed.
 - **Reset elapsed time on next action**: If enabled, the timer will reset when switching between edit/render modes.
 - **Display active mode**: Displays active mode.
+
