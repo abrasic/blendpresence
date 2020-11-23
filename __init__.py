@@ -8,7 +8,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.90",
     "author": "Abrasic",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -110,7 +110,11 @@ def updatePresenceTimer():
     return 5.0
 
 def updatePresence():
-
+    activityState = None
+    activityDescription = None
+    smallIcon = None
+    smallIconText = None
+    
     # Pre-Checks
     readPid = readPidFile()
     if readPid is None:
@@ -124,8 +128,10 @@ def updatePresence():
 
     # Details and State
     if isRendering:
+
         smallIcon = "render"
-        smallIconText = f"{getRenderEngineStr()} Engine"
+        if prefs.displayRenderStats:
+            smallIconText = f"{bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}"
         # Rendering Details (prefs)
         if prefs.displayFileName and getFileName():
             activityDescription = f"Rendering {getFileName()}.blend"
@@ -134,14 +140,22 @@ def updatePresence():
         # Rendering State
         if renderedFrames > 0:
             frameRange = getFrameRange()
-            activityState = f"Frame {frameRange[0]} of {frameRange[1]}"
+            if prefs.displayRenderStats:
+                smallIconText = f"{bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}@{bpy.context.scene.render.fps}fps"
+            if prefs.displayFrames:
+                activityState = f"Frame {frameRange[0]} of {frameRange[1]}"
         else:
-            activityState = f"Image of frame {bpy.context.scene.frame_current}"
+            if prefs.displayFrames:
+                activityState = f"Frame {bpy.context.scene.frame_current}"
     else:
-        activityDescription = "Working on a project"    
+        activityDescription = f"{getFileName()}.blend"
+        if prefs.displayFileName:
+            activityDescription = activityDescription
+        else:
+            activityDescription = "Working on a project"
+
         activeMode = bpy.context.object.mode
-        smallIcon = None
-        smallIconText = None
+
         if prefs.displayMode and activeMode:
             smallIcon = activeMode.lower()
             smallIconText = activeMode.replace("_", " ").title()
@@ -150,13 +164,6 @@ def updatePresence():
                 smallIconText = activeMode.replace("_", " ").title()
             else:
                 smallIconText = f'{activeMode.replace("_", " ").title()} Mode'
-
-        # State
-        activityState = getFileName()
-        if prefs.displayFileName and activityState:
-            activityState = f"{activityState}.blend"
-        else:
-            activityState = None
 
     # Start Time (prefs)
     if prefs.displayTime and not isRendering:
@@ -189,7 +196,7 @@ def getFileName():
 def getVersionStr():
     verTup = bpy.app.version
     verChar = bpy.app.version_char
-    return f"Blender {verTup[0]}.{verTup[1]}.{verTup[2]}{verChar}"
+    return f"{getRenderEngineStr()} Engine in {verTup[0]}.{verTup[1]}.{verTup[2]}{verChar}"
 
 def getRenderEngineStr():
     internalName = bpy.context.engine
@@ -230,9 +237,23 @@ class RpcPreferences(bpy.types.AddonPreferences):
         description = "Displays the current mode from the 3D Viewport",
         default = True,
     )
+    
+    displayFrames: bpy.props.BoolProperty(
+        name = "Display rendered frames",
+        description = "Displays the current frames while rendering.",
+        default = True,
+    )
+    
+    displayRenderStats: bpy.props.BoolProperty(
+        name = "Display render stats",
+        description = "Displays camera resolution and FPS while rendering.",
+        default = True,
+    )
 
     def draw(self, context):
         self.layout.prop(self, "displayFileName")
         self.layout.prop(self, "displayTime")
         self.layout.prop(self, "resetTimer")
         self.layout.prop(self, "displayMode")
+        self.layout.prop(self, "displayFrames")
+        self.layout.prop(self, "displayRenderStats")
