@@ -7,6 +7,7 @@ BlendPresence is a blender plugin that shows off what you're doing in blender us
 ![Example 2](https://abrasic.com/assets/img/bp2.png)
 
 ## Installation
+0. Download Python if you haven't: https://www.python.org/
 1. Download the latest version in **Releases**. DO NOT UNZIP
 2. In Blender go to **Edit > Preferences > Addons > Install** and select the downloaded zip file.
 3. Enable the plugin and manage settings as such.
