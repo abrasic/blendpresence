@@ -8,7 +8,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.90",
     "author": "Abrasic",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -149,10 +149,13 @@ def updatePresence():
                 activityState = f"Frame {bpy.context.scene.frame_current}"
     else:
         activityDescription = f"{getFileName()}.blend"
-        if prefs.displayFileName:
+        if prefs.displayFileName and getFileName():
             activityDescription = activityDescription
         else:
             activityDescription = "Working on a project"
+            
+        if len(prefs.customText) > 2: # Discord gets mad when it's less than two
+            activityState = str(prefs.customText)
 
         activeMode = bpy.context.object.mode
 
@@ -174,7 +177,16 @@ def updatePresence():
         fStartTime = None
 
     # Large Icon
-    largeIconText = getVersionStr()
+    if prefs.displayVersion:
+        if prefs.displayEngine:
+            largeIconText = getRenderEngineStr() + " in " + getVersionStr()
+        else:
+            largeIconText = getVersionStr()
+    else:
+        if prefs.displayEngine:
+            largeIconText = getRenderEngineStr()
+        else:
+            largeIconText = None
 
     rpcClient.update(
         pid=os.getpid(),
@@ -196,12 +208,12 @@ def getFileName():
 def getVersionStr():
     verTup = bpy.app.version
     verChar = bpy.app.version_char
-    return f"{getRenderEngineStr()} Engine in {verTup[0]}.{verTup[1]}.{verTup[2]}{verChar}"
+    return f"{verTup[0]}.{verTup[1]}.{verTup[2]}{verChar}"
 
 def getRenderEngineStr():
     internalName = bpy.context.engine
     internalNameStripped = internalName.replace("BLENDER_", "").replace("_", " ")
-    return internalNameStripped.title()
+    return internalNameStripped.title() + " Engine"
 
 def getFrameRange():
     """Current frame and total remaining frames"""
@@ -215,14 +227,14 @@ class RpcPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
 
     displayFileName: bpy.props.BoolProperty(
-        name = "Display file name",
-        description = "Displays .blend file name of the current project.",
+        name = "File name",
+        description = "Displays .blend file name of the current project",
         default = False,
     )
     
     displayTime: bpy.props.BoolProperty(
-        name = "Display elapsed time",
-        description = "Displays total amount of time elapsed",
+        name = "Elapsed time",
+        description = "Displays total amount of time elapsed since the plugin was enabled",
         default = True,
     )
     
@@ -233,27 +245,58 @@ class RpcPreferences(bpy.types.AddonPreferences):
     )
     
     displayMode: bpy.props.BoolProperty(
-        name = "Display active mode",
-        description = "Displays the current mode from the 3D Viewport",
+        name = "Active mode",
+        description = "Displays the current mode (Object, Edit, Pose, etc.) from the 3D Viewport",
+        default = True,
+    )
+    
+    displayEngine: bpy.props.BoolProperty(
+        name = "Render engine",
+        description = "Displays the current render engine",
+        default = True,
+    )
+
+    displayVersion: bpy.props.BoolProperty(
+        name = "Blender version",
+        description = "Displays the version of Blender software",
         default = True,
     )
     
     displayFrames: bpy.props.BoolProperty(
-        name = "Display rendered frames",
-        description = "Displays the current frames while rendering.",
+        name = "Rendered frames",
+        description = "Displays the current frames while rendering",
         default = True,
     )
     
     displayRenderStats: bpy.props.BoolProperty(
-        name = "Display render stats",
-        description = "Displays camera resolution and FPS while rendering.",
+        name = "Render stats",
+        description = "Displays render information such as camera resolution and FPS while rendering.",
         default = True,
     )
 
+    customText: bpy.props.StringProperty(
+        name = "Custom text",
+        description = "A piece of text that will display above the elapsed time. Two characters or longer",
+        default = "",
+    )
+
     def draw(self, context):
-        self.layout.prop(self, "displayFileName")
-        self.layout.prop(self, "displayTime")
-        self.layout.prop(self, "resetTimer")
-        self.layout.prop(self, "displayMode")
-        self.layout.prop(self, "displayFrames")
-        self.layout.prop(self, "displayRenderStats")
+        self.layout.label(text="General", icon="PREFERENCES")
+        
+        box1 = self.layout.box()
+        box1.prop(self, "displayFileName")
+        box1.prop(self, "customText")
+        box1.prop(self, "displayTime")
+        box1.prop(self, "resetTimer")
+        
+        self.layout.label(text="Icons", icon="IMAGE")
+        box2 = self.layout.box()
+        box2.prop(self, "displayMode")
+        box2.prop(self, "displayEngine")
+        box2.prop(self, "displayVersion")
+       
+        
+        self.layout.label(text="Rendering", icon="RENDER_STILL")
+        box3 = self.layout.box()
+        box3.prop(self, "displayFrames")
+        box3.prop(self, "displayRenderStats")
