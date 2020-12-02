@@ -1,3 +1,5 @@
+### Do NOT download from the repo! Please download the latest version from Releases!
+
 # BlendPresence
 A personalized Blender plugin fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
 
