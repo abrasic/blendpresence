@@ -8,7 +8,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.90",
     "author": "Abrasic",
-    "version": (1, 2, 0),
+    "version": (1, 2, 1),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -203,7 +203,8 @@ def getFileName():
     name = bpy.path.display_name_from_filepath(bpy.data.filepath)
     if name == "":
         return None
-    return name
+    else:
+        return name
 
 def getVersionStr():
     verTup = bpy.app.version
@@ -239,8 +240,8 @@ class RpcPreferences(bpy.types.AddonPreferences):
     )
     
     resetTimer: bpy.props.BoolProperty(
-        name = "Reset elapsed time on next action",
-        description = "While enabled, the elapsed time will reset when switching between viewport/render modes",
+        name = "Reset elapsed time on render",
+        description = "While enabled, the elapsed time will reset when a render begins",
         default = True,
     )
     
@@ -263,40 +264,39 @@ class RpcPreferences(bpy.types.AddonPreferences):
     )
     
     displayFrames: bpy.props.BoolProperty(
-        name = "Rendered frames",
-        description = "Displays the current frames while rendering",
+        name = "Rendering: Frame count",
+        description = "While rendering: Displays the current frame count",
         default = True,
     )
     
     displayRenderStats: bpy.props.BoolProperty(
-        name = "Render stats",
-        description = "Displays render information such as camera resolution and FPS while rendering.",
+        name = "Rendering: Render stats",
+        description = "While rendering: Displays render information such as camera resolution and FPS",
         default = True,
     )
 
     customText: bpy.props.StringProperty(
         name = "Custom text",
-        description = "A piece of text that will display above the elapsed time. Two characters or longer",
+        description = "A string that will display above the elapsed time. Two characters or longer",
         default = "",
     )
 
     def draw(self, context):
-        self.layout.label(text="General", icon="PREFERENCES")
-        
-        box1 = self.layout.box()
-        box1.prop(self, "displayFileName")
-        box1.prop(self, "customText")
-        box1.prop(self, "displayTime")
-        box1.prop(self, "resetTimer")
-        
-        self.layout.label(text="Icons", icon="IMAGE")
-        box2 = self.layout.box()
+        row = self.layout.row()
+        box1 = row.box()
+        box1.label(text="Large Icon Hover", icon="BLENDER")
+        box1.prop(self, "displayEngine")
+        box1.prop(self, "displayVersion")
+
+        box2 = box1.box()
+        box2.label(text="Small Icon Hover", icon="PROP_CON")
         box2.prop(self, "displayMode")
-        box2.prop(self, "displayEngine")
-        box2.prop(self, "displayVersion")
-       
+        box2.prop(self, "displayRenderStats")
         
-        self.layout.label(text="Rendering", icon="RENDER_STILL")
-        box3 = self.layout.box()
+        box3 = row.box()
+        box3.label(text="Text Display", icon="TEXT")
+        box3.prop(self, "displayFileName")
         box3.prop(self, "displayFrames")
-        box3.prop(self, "displayRenderStats")
+        box3.prop(self, "customText")
+        box3.prop(self, "displayTime")
+        box3.prop(self, "resetTimer")
