@@ -156,7 +156,6 @@ def updatePresence():
         activeMode = bpy.context.mode
         
         for i in modes:
-            print(i + " " + activeMode)
             if i in activeMode:
                 smallIconText = modes[i][0]
                 smallIcon = modes[i][1]
