@@ -10,7 +10,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.90",
     "author": "Abrasic",
-    "version": (1, 3, 0),
+    "version": (1, 3, 1),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -141,15 +141,25 @@ def updatePresence():
             largeIconText = None
 
     ## SMALL ICON
-    activeMode = bpy.context.object.mode
-    if prefs.displayMode and activeMode:
-        smallIcon = activeMode.lower()
-        smallIconText = activeMode.replace("_", " ").title()
+    if prefs.displayMode and bpy.context.mode:
+    
+        modes = {
+            "OBJECT": ["Object Mode", "object"],
+            "EDIT_": ["Edit Mode", "edit"],
+            "SCULPT": ["Sculpt Mode", "sculpt"],
+            "PAINT_GPENCIL": ["Draw Mode", "paint_gpencil"],
+            "PAINT_TEXTURE": ["Texture Paint", "texture_paint"],
+            "PAINT_VERTEX": ["Vertex Paint", "vertex_paint"],
+            "PAINT_WEIGHT": ["Weight Paint", "weight_paint"],
+        }
         
-        if "MODE" in activeMode:
-            smallIconText = activeMode.replace("_", " ").title()
-        else:
-            smallIconText = f'{activeMode.replace("_", " ").title()} Mode' 
+        activeMode = bpy.context.mode
+        
+        for i in modes:
+            print(i + " " + activeMode)
+            if i in activeMode:
+                smallIconText = modes[i][0]
+                smallIcon = modes[i][1]
             
     ## DETAILS AND STATE
     if isRendering:
@@ -317,7 +327,6 @@ def getFrameRange():
     cursor = bpy.context.scene.frame_current
     return (cursor - start + 1, end - start + 1)
 
-
 class RpcPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
 
@@ -380,7 +389,6 @@ class RpcPreferences(bpy.types.AddonPreferences):
         description = "Displays range of currently rendering frames (ex. 'Frame 1 of 100')",
         default = True,
     )
-
     
     ## STATE
     enableState: bpy.props.BoolProperty(
