@@ -18,9 +18,8 @@ Make sure in Discord, your **User Settings > Game Activity > Display currently r
 
 ## Customizable Features
 ### Large Icon Tooltip ###
-**Render Engine** displays the render engine that's currently in use by the user. This should work with most other third-party render engines such as Octane and Redshift.
-
-**Blender Version**: Displays Blender version that the addon is running in.
+- **Render Engine** displays the render engine that's currently in use by the user. This should work with most other third-party render engines such as Octane and Redshift.
+- **Blender Version**: Displays Blender version that the addon is running in.
 
 ### Small Icon ###
 - (Viewport) **Active Mode** displays the mode (Object, Edit, Pose, etc.) that the user is currently active in.
