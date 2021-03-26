@@ -8,9 +8,9 @@ from .pypresence import pypresence as rpc
 
 bl_info = {
     "name": "BlendPresence",
-    "description": "Discord Rich Presence for Blender 2.9",
+    "description": "Discord Rich Presence for Blender 2.9x",
     "author": "Abrasic",
-    "version": (1, 3, 2),
+    "version": (1, 4, 0),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -21,7 +21,6 @@ startTime = None
 isRendering = False
 renderedFrames = 0
 timer = 5
-cycleIndex = 0
 
 def register():
     global startTime
@@ -171,7 +170,7 @@ def updatePresence():
         if isRendering:
             smallIcon = "render"
             if prefs.displayRenderStats:
-                smallIconText = f"{bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}"
+                smallIconText = f"Rendering | {bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}"
             else:
                 smallIconText = None
             # Rendering Details (prefs)
@@ -189,7 +188,7 @@ def updatePresence():
             if renderedFrames > 0:
                 frameRange = getFrameRange()
                 if prefs.displayRenderStats:
-                    smallIconText = f"{bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}@{bpy.context.scene.render.fps}fps"
+                    smallIconText = f"Rendering | {bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}@{bpy.context.scene.render.fps}fps"
                 else:
                     smallIconText = None
                 if prefs.displayFrames:
@@ -211,61 +210,28 @@ def updatePresence():
                         detailsText = "  "
             else:
                 detailsText = "  "
-                
-            if len(prefs.stateCustomText) > 1:
-                stateText = str(prefs.stateCustomText)
+              
             
             # GET COUNTS      
-            if prefs.enableState:
-                if prefs.stateCycle:
-                    textCycles = []
-                    if prefs.stateCustomText:
-                        textCycles.append(prefs.stateCustomText)
-                    if prefs.stateDisplayObjects:
-                        textCycles.append(getObjectCount())
-                    if prefs.stateDisplayFaces:
-                        textCycles.append(getFaceCount())
-                    if prefs.stateDisplayBones:
-                        textCycles.append(getBoneCount())
-                    if prefs.stateDisplayMats:
-                        textCycles.append(getMatCount())
-                    if prefs.stateDisplayKeys:
-                        textCycles.append(getKeyCount())
-                    if prefs.stateDisplayFrame:
-                        textCycles.append(getCurrentFrame())
-                        
-                    if textCycles:
-                        global cycleIndex
-                        i = len(textCycles)
-                        print("----")
-                        print(i)                    
-                        print(cycleIndex)
-                                            
-                        if cycleIndex >= i:
-                            cycleIndex = 0  
-                            
-                        stateText = textCycles[cycleIndex]
-                        
-                        cycleIndex += 1
-
-                    else:
-                        stateText = "  "
-
+            if prefs.stateType == "custom":
+                if len(prefs.stateCustomText) > 1:
+                    stateText = str(prefs.stateCustomText)
                 else:
-                    if prefs.stateCustomText:
-                        stateText = prefs.stateCustomText
-                    if prefs.stateDisplayObjects:
-                        stateText = getObjectCount()
-                    if prefs.stateDisplayFaces:
-                        stateText = getFaceCount()
-                    if prefs.stateDisplayBones:
-                        stateText = getBoneCount()
-                    if prefs.stateDisplayMats:
-                        stateText = getMatCount()
-                    if prefs.stateDisplayKeys:
-                        stateText = getKeyCount()
-                    if prefs.stateDisplayFrame:
-                        stateText = getCurrentFrame()
+                    stateText = "  "
+            if prefs.stateType == "obj":
+                stateText = getObjectCount()
+            if prefs.stateType == "poly":
+                stateText = getPolyCount()
+            if prefs.stateType == "bone":
+                stateText = getBoneCount()
+            if prefs.stateType == "mat":
+                stateText = getMatCount()
+            if prefs.stateType == "frame":
+                stateText = getCurrentFrame()
+            if prefs.stateType == "anim":
+                stateText = getFramesAnimated()
+            if prefs.stateType == "active":
+                stateText = getActiveObject()
                     
         # Start Time (prefs)
         if prefs.enableTime and not isRendering:
@@ -275,7 +241,7 @@ def updatePresence():
         else:
             fStartTime = None
 
-
+        # Push to RPC
         rpcClient.update(
             pid=os.getpid(),
             start=fStartTime,
@@ -286,6 +252,7 @@ def updatePresence():
             large_image='blenderlogo',
             large_text=largeIconText,
         )
+
     else:
         rpcClient.clear()
 
@@ -299,12 +266,12 @@ def getFileName():
 def getObjectCount():
     return f"{len(bpy.context.selectable_objects):,d} total objects"
     
-def getFaceCount():
+def getPolyCount():
     count = 0
     for element in bpy.context.scene.objects:
         if element.type == "MESH":
             count += len(element.data.polygons)
-    return f"{count:,d} total faces"
+    return f"{count:,d} total polys"
 
 def getBoneCount():
     count = 0
@@ -316,25 +283,20 @@ def getBoneCount():
 def getMatCount():
     return f"{len(bpy.data.materials):,d} total materials"
     
-def getKeyCount():
-    keyframes = []
-    if bpy.context.scene.objects:
-        for obj in bpy.context.scene.objects:
-            anim = obj.animation_data
-            if anim is not None and anim.action is not None:
-                for fcu in anim.action.fcurves:
-                    for keyframe in fcu.keyframe_points:
-                        x, y = keyframe.co
-                        if x not in keyframes:
-                            keyframes.append((math.ceil(x)))
-    return f"{len(keyframes):,d} frames animated"
+def getFramesAnimated():
+    if bpy.data.actions:
+        ac = [action.frame_range for action in bpy.data.actions]
+        k = (sorted(set([item for sublist in ac for item in sublist])))
+        return f"{math.floor(k[-1]):,d} frames animated"
+    else:
+        return "  "
         
 def getCurrentFrame():
-    i = "⏸"
+    i = "Viewing frame"
     if bpy.context.screen.is_animation_playing:
-       i = "▶️"
+       i = "Playing animation |"
        
-    return f"{i} Viewing frame {bpy.context.scene.frame_current:,d}"
+    return f"{i} {bpy.context.scene.frame_current:,d}"
     
 def getVersionStr():
     verTup = bpy.app.version
@@ -351,6 +313,12 @@ def getFrameRange():
     end = bpy.context.scene.frame_end
     cursor = bpy.context.scene.frame_current
     return (cursor - start + 1, end - start + 1)
+    
+def getActiveObject():
+    if bpy.context.active_object:
+        return bpy.context.active_object.name
+    else:
+        return ""
 
 class RpcPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
@@ -432,14 +400,23 @@ class RpcPreferences(bpy.types.AddonPreferences):
     ## STATE
     enableState: bpy.props.BoolProperty(
         name = "Enabled",
-        description = "Enables 'state' property. This text is shown right under the 'Details' in the presence",
-        default = False,
+        description = "Enables 'state' property. This is the middle piece of text shown in the presence",
+        default = True,
     )
     
-    stateCycle: bpy.props.BoolProperty(
-        name = "Cycle",
-        description = "Allows the selection of multiple options. Selected options will cycle through the presence every time its updated",
-        default = False,
+    stateType: bpy.props.EnumProperty(
+        name = "Display",
+        items = (
+            ("anim", "Frames Animated", "Displays the frame number that holds the last keyframe from all given actions."),
+            ("poly", "Polygon Count", "Display the total amount of objects in the current scene"),
+            ("bone", "Bone Count", "Display the total amount of armature bones in the current scene"),
+            ("mat", "Material Count", "Display the total amount of materials in the current scene"),
+            ("obj", "Object Count", "Display the total amount of objects in the current scene"),
+            ("active", "Active Object", "Display the name of the curent active object selected. If none is seleced then this will return nothing."),
+            ("frame", "Current Frame", "Display the current frame being viewed in the timeline. The text will also change if you are playing back an animation."),
+            ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
+        ),
+        default = "custom",
     )
 
     stateCustomText: bpy.props.StringProperty(
@@ -450,40 +427,9 @@ class RpcPreferences(bpy.types.AddonPreferences):
 
     stateDisplayObjects: bpy.props.BoolProperty(
         name = "Object Count",
-        description = "Displays the number of all objects in the scene.",
+        description = "Displays the number of all objects in the scene",
         default = False,
     )
-    
-    stateDisplayFaces: bpy.props.BoolProperty(
-        name = "Face Count",
-        description = "Displays the sum of all faces on all meshes in the scene.",
-        default = False,
-    )
-    
-    stateDisplayBones: bpy.props.BoolProperty(
-        name = "Bone Count",
-        description = "Displays the sum of all bones on all armatures in the scene.",
-        default = False,
-    )
-    
-    stateDisplayMats: bpy.props.BoolProperty(
-        name = "Material Count",
-        description = "Displays the number of all materials in the scene.",
-        default = False,
-    )
-    
-    stateDisplayKeys: bpy.props.BoolProperty(
-        name = "Keyframe Count (!)",
-        description = "(!) EXPENSIVE / The number of frames that have atleast one keyframe on the currently selected object.",
-        default = False,
-    )
-    
-    stateDisplayFrame: bpy.props.BoolProperty(
-        name = "Current Frame",
-        description = "Displays the number of the current frame you're viewing.",
-        default = False,
-    )
-    
     
     ## TIME ELAPSED
     enableTime: bpy.props.BoolProperty(
@@ -500,8 +446,6 @@ class RpcPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         prefs = bpy.context.preferences.addons[__name__].preferences
-        cyclers = [prefs.stateCustomText, prefs.stateDisplayObjects, prefs.stateDisplayFaces, prefs.stateDisplayBones, prefs.stateDisplayMats, prefs.stateDisplayKeys, prefs.stateDisplayFrame]
-        cyclStr = ["stateCustomText", "stateDisplayObjects", "stateDisplayFaces", "stateDisplayBones", "stateDisplayMats", "stateDisplayKeys", "stateDisplayFrame"]
 
         layoutTop = self.layout.row()
         layout = self.layout.row()
@@ -550,32 +494,11 @@ class RpcPreferences(bpy.types.AddonPreferences):
             if prefs.enableState:
                 boxStViewSettings = boxSt.row().box()
                 boxStViewSettings.label(text="Viewport", icon="VIEW3D")
-                boxStViewSettings.prop(self, "stateCycle")
-                boxStViewCyclers = boxStViewSettings.row().box()
+                boxStViewSettings.prop(self, "stateType")
                 
-                if not prefs.stateCycle:
-                    boxStViewSettings.label(text="'Cycle' is not enabled. Only one option can be enabled at a time.")
-                
-                boxStViewSettings.separator(factor=0.5)
-                
-                e = False
-                d = False
-                if not prefs.stateCycle:
-                    i = 0
-                    for value in cyclers:
-                        if d:
-                            prefs[cyclStr[i]] = False
-                        if value and not d:
-                            e = True
-                            d = True
-                            boxStViewCyclers.prop(self, cyclStr[i])
-                        i += 1
+                if prefs.stateType == "custom":
+                    boxStViewSettings.prop(self, "stateCustomText")
 
-                if not e:
-                    for value in cyclStr:
-                        boxStViewCyclers.prop(self, value)
-
-                
                 boxStViewSettings = boxSt.row().box()
                 boxStViewSettings.label(text="Rendering", icon="RENDER_STILL")
                 boxStViewSettings.prop(self, "displayFrames")
