@@ -10,7 +10,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.9x",
     "author": "Abrasic",
-    "version": (1, 4, 0),
+    "version": (1, 4, 1),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -192,7 +192,7 @@ def updatePresence():
                 else:
                     smallIconText = None
                 if prefs.displayFrames:
-                    stateText = f"Frame {frameRange[0]} of {frameRange[1]}"
+                    stateText = f"Frame {frameRange[0]} of {frameRange[1]} ({str(round(frameRange[0]/frameRange[1],4)*100)}%)"
             else:
                 if prefs.enableState and prefs.displayFrames:
                     stateText = f"Frame {bpy.context.scene.frame_current}"
@@ -230,6 +230,8 @@ def updatePresence():
                 stateText = getCurrentFrame()
             if prefs.stateType == "anim":
                 stateText = getFramesAnimated()
+            if prefs.stateType == "size":
+                stateText = getFileSize()
             if prefs.stateType == "active":
                 stateText = getActiveObject()
                     
@@ -263,6 +265,20 @@ def getFileName():
     else:
         return name
 
+def readsize(b):
+    for u in [' bytes', ' KB', ' MB', ' GB', ' TB']:
+        if b < 1024.0 or u == ' PB':
+            break
+        b /= 1024.0
+    return f"{b:.2f} {u}"
+    
+def getFileSize():
+    path = bpy.data.filepath
+    if path:
+        return readsize(os.path.getsize(path))
+    else:
+        return None
+        
 def getObjectCount():
     return f"{len(bpy.context.selectable_objects):,d} total objects"
     
@@ -414,6 +430,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
             ("obj", "Object Count", "Display the total amount of objects in the current scene"),
             ("active", "Active Object", "Display the name of the curent active object selected. If none is seleced then this will return nothing."),
             ("frame", "Current Frame", "Display the current frame being viewed in the timeline. The text will also change if you are playing back an animation."),
+            ("size", "File Size", "Displays the file size of your current project file. If your project is not saved, nothing will display."),
             ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
         ),
         default = "custom",
