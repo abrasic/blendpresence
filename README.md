@@ -26,9 +26,11 @@ You will need to do this everytime you want to update the plugin.
 
 
 ## Troubleshooting
+
 If the Rich Presence is not displaying, try the following:
 * In Discord, go to your **User Settings > Activity Status > Display current activity as a status message** and make sure it's _enabled_.
 * It could be a display bug. Refresh the Discord client by pressing `Ctrl+R`
+   * **At this time, BlendPresence will not automatically re-connect if you refresh your Discord client. You will need to re-enable the addon if you want to make it reappear after a Discord update or refresh.**
 * It could be a bug with the addon. Try re-enabling it or go to `Window > Toggle System Console` and ensure no errors from BlendPresence appear.
 
 ## Customizable Features
