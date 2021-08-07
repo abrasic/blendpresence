@@ -1,284 +1,69 @@
-import bpy
-import os
-import sys
-import time
-import math
-import random
-from .pypresence import pypresence as rpc
+import bpy, os, time, math
+from .pypresence import Presence
+from .pypresence import exceptions
 
 bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.9x",
     "author": "Abrasic",
-    "version": (1, 4, 1),
+    "version": (1, 5, 0),
     "blender": (2, 90, 1),
     "category": "System",
 }
 
-rpcClient = rpc.Presence("766373631424200705")
-pidFilePath = os.path.join(os.path.dirname(os.path.normpath(bpy.app.tempdir)), "BlendRpcPid")
-startTime = None
-isRendering = False
-renderedFrames = 0
-timer = 5
+def connectRPC():
+    try:
+        rpcClient.connect()
+        print("[BP] Connected!")
+        return True
+    except ConnectionRefusedError:
+        print("[BP] Unable to connect: ConnectionRefusedError")
+        return False
+    except (FileNotFoundError, AttributeError, exceptions.InvalidPipe, AssertionError):
+        print("[BP] Unable to connect: Discord client not detected")
+        return False
+        
+# RPC
+rpcClient = Presence("766373631424200705")
 
-def register():
-    global startTime
-
-    bpy.utils.register_class(RpcPreferences)
-    startTime = time.time()
-    rpcClient.connect()
-    writePidFileAtomic()
-    bpy.app.timers.register(updatePresenceTimer, first_interval=1.0, persistent=True)
-    bpy.app.handlers.save_post.append(writePidHandler)
-    
-    # Rendering
-    bpy.app.handlers.render_init.append(startRenderJobHandler)
-    bpy.app.handlers.render_complete.append(endRenderJobHandler)
-    bpy.app.handlers.render_cancel.append(endRenderJobHandler)
-    bpy.app.handlers.render_post.append(postRenderHandler)
-
-def unregister():
-    global startTime
-
+# VARS
+class bpi:
     startTime = None
-    rpcClient.close()
-    removePidFile()
-    bpy.app.timers.unregister(updatePresenceTimer)
-    bpy.app.handlers.save_post.remove(writePidHandler)
-    bpy.utils.unregister_class(RpcPreferences)
-    
-    # Rendering
-    bpy.app.handlers.render_init.remove(startRenderJobHandler)
-    bpy.app.handlers.render_complete.remove(endRenderJobHandler)
-    bpy.app.handlers.render_cancel.remove(endRenderJobHandler)
-    bpy.app.handlers.render_post.remove(postRenderHandler)
-
-def writePidFileAtomic():
-    pid = os.getpid()
-    tmpPidFilePath = f"{pidFilePath}-{pid}"
-    with open(tmpPidFilePath, "w") as tmpPidFile:
-        tmpPidFile.write(str(pid))
-        tmpPidFile.flush()
-        os.fsync(tmpPidFile.fileno())
-    os.replace(tmpPidFilePath, pidFilePath)
-
-def readPidFile():
-    try:
-        with open(pidFilePath, 'r') as pidFile:
-            storedPid = int(pidFile.read())
-    except OSError:
-        return None
-    except ValueError:
-        return None
-    return storedPid
-
-def removePidFile():
-    try:
-        os.remove(pidFilePath)
-    except OSError:
-        pass
-
-@bpy.app.handlers.persistent
-def writePidHandler(*args):
-    writePidFileAtomic()
+    connected = False
+    isRendering = False
+    renderedFrames = 0
+    timer = 5
 
 @bpy.app.handlers.persistent
 def startRenderJobHandler(*args):
-    global isRendering
-    global startTime
-    isRendering = True
+    bpi.isRendering = True
     
     if bpy.context.preferences.addons[__name__].preferences.resetTimer:
-        startTime = time.time()
+        bpi.startTime = time.time()
 
 @bpy.app.handlers.persistent
 def endRenderJobHandler(*args):
-    global isRendering
-    global renderedFrames
-    global startTime
-    isRendering = False
-    renderedFrames = 0
+    bpi.isRendering = False
+    bpi.renderedFrames = 0
     
     if bpy.context.preferences.addons[__name__].preferences.resetTimer:
-        startTime = time.time()
+        bpi.startTime = time.time()
 
 @bpy.app.handlers.persistent
 def postRenderHandler(*args):
-    global renderedFrames
-    renderedFrames += 1
+    bpi.renderedFrames += 1
     
 def updatePresenceTimer():
     updatePresence()
-    return timer
-
-def updatePresence():
-    global timer
-    stateText = None
-    detailsText = None
-    smallIcon = None
-    smallIconText = None
+    return bpi.timer
     
-    # Pre-Checks
-    readPid = readPidFile()
-    if readPid is None:
-        writePidFileAtomic()
-    elif readPid != os.getpid():
-        rpcClient.clear()
-        return
-    
-    # Addon Preferences
-    prefs = bpy.context.preferences.addons[__name__].preferences
-    
-    if prefs.generalEnable:
-        timer = prefs.generalUpdate
-
-        ## LARGE ICON
-        if prefs.displayVersion:
-            if prefs.displayEngine:
-                largeIconText = getRenderEngineStr() + " in " + getVersionStr()
-            else:
-                largeIconText = getVersionStr()
-        else:
-            if prefs.displayEngine:
-                largeIconText = getRenderEngineStr()
-            else:
-                largeIconText = None
-
-        ## SMALL ICON
-        if prefs.displayMode and bpy.context.mode:
-        
-            modes = {
-                "OBJECT": ["Object Mode", "object"],
-                "EDIT_": ["Edit Mode", "edit"],
-                "POSE": ["Pose Mode", "pose"],
-                "SCULPT": ["Sculpt Mode", "sculpt"],
-                "PAINT_GPENCIL": ["Draw Mode", "paint_gpencil"],
-                "PAINT_TEXTURE": ["Texture Paint", "texture_paint"],
-                "PAINT_VERTEX": ["Vertex Paint", "vertex_paint"],
-                "PAINT_WEIGHT": ["Weight Paint", "weight_paint"],
-            }
-            
-            activeMode = bpy.context.mode
-            
-            for i in modes:
-                if i in activeMode:
-                    smallIconText = modes[i][0]
-                    smallIcon = modes[i][1]
-                
-        ## DETAILS AND STATE
-        if isRendering:
-            smallIcon = "render"
-            if prefs.displayRenderStats:
-                smallIconText = f"Rendering | {bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}"
-            else:
-                smallIconText = None
-            # Rendering Details (prefs)
-
-            if prefs.enableDetails:
-                if prefs.detailsType == "literal":
-                    if prefs.displayFileName and getFileName():
-                        detailsText = f"Rendering {getFileName()}.blend"
-                    else:
-                        detailsText = f"Rendering a project"
-                else:
-                    detailsText = str(prefs.detailsCustomText)
-                
-            # Rendering State
-            if renderedFrames > 0:
-                frameRange = getFrameRange()
-                if prefs.displayRenderStats:
-                    smallIconText = f"Rendering | {bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}@{bpy.context.scene.render.fps}fps"
-                else:
-                    smallIconText = None
-                if prefs.displayFrames:
-                    stateText = f"Frame {frameRange[0]} of {frameRange[1]} ({str(round(frameRange[0]/frameRange[1],4)*100)}%)"
-            else:
-                if prefs.enableState and prefs.displayFrames:
-                    stateText = f"Frame {bpy.context.scene.frame_current}"
-        else: ## NOT RENDERING
-            if prefs.enableDetails:
-                if prefs.detailsType == "literal":
-                    if prefs.displayFileName and getFileName():
-                        detailsText = f"{getFileName()}.blend"
-                    else:
-                        detailsText = "Working on a project"
-                else:
-                    if prefs.detailsCustomText and len(prefs.detailsCustomText) > 1:
-                        detailsText = str(prefs.detailsCustomText)
-                    else: # Details cannot be empty or less than 2 chars but for some reason this works too
-                        detailsText = "  "
-            else:
-                detailsText = "  "
-              
-            
-            # GET COUNTS      
-            if prefs.stateType == "custom":
-                if len(prefs.stateCustomText) > 1:
-                    stateText = str(prefs.stateCustomText)
-                else:
-                    stateText = "  "
-            if prefs.stateType == "obj":
-                stateText = getObjectCount()
-            if prefs.stateType == "poly":
-                stateText = getPolyCount()
-            if prefs.stateType == "bone":
-                stateText = getBoneCount()
-            if prefs.stateType == "mat":
-                stateText = getMatCount()
-            if prefs.stateType == "frame":
-                stateText = getCurrentFrame()
-            if prefs.stateType == "anim":
-                stateText = getFramesAnimated()
-            if prefs.stateType == "size":
-                stateText = getFileSize()
-            if prefs.stateType == "active":
-                stateText = getActiveObject()
-                    
-        # Start Time (prefs)
-        if prefs.enableTime and not isRendering:
-            fStartTime = startTime
-        elif prefs.enableTime and isRendering:
-            fStartTime = startTime
-        else:
-            fStartTime = None
-
-        # Push to RPC
-        rpcClient.update(
-            pid=os.getpid(),
-            start=fStartTime,
-            state=stateText,
-            details=detailsText,
-            small_image=smallIcon,
-            small_text=smallIconText,
-            large_image='blenderlogo',
-            large_text=largeIconText,
-        )
-
+def evalCustomText(str):
+    if len(str) > 1:
+        return str
     else:
-        rpcClient.clear()
+        return "  " 
+        # Details cannot be empty or less than 2 chars but for some reason this works too
 
-def getFileName():
-    name = bpy.path.display_name_from_filepath(bpy.data.filepath)
-    if name == "":
-        return None
-    else:
-        return name
-
-def readsize(b):
-    for u in [' bytes', ' KB', ' MB', ' GB', ' TB']:
-        if b < 1024.0 or u == ' PB':
-            break
-        b /= 1024.0
-    return f"{b:.2f} {u}"
-    
-def getFileSize():
-    path = bpy.data.filepath
-    if path:
-        return readsize(os.path.getsize(path))
-    else:
-        return None
-        
 def getObjectCount():
     return f"{len(bpy.context.selectable_objects):,d} total objects"
     
@@ -303,6 +88,7 @@ def getFramesAnimated():
     if bpy.data.actions:
         ac = [action.frame_range for action in bpy.data.actions]
         k = (sorted(set([item for sublist in ac for item in sublist])))
+        print(k)
         return f"{math.floor(k[-1]):,d} frames animated"
     else:
         return "  "
@@ -312,7 +98,28 @@ def getCurrentFrame():
     if bpy.context.screen.is_animation_playing:
        i = "Playing animation |"
        
-    return f"{i} {bpy.context.scene.frame_current:,d}"
+    return f"{i} {bpy.context.scene.frame_current:,d}"   
+
+def getFileName():
+    name = bpy.path.display_name_from_filepath(bpy.data.filepath)
+    if name == "":
+        return None
+    else:
+        return name
+
+def readsize(b):
+    for u in [' bytes', ' KB', ' MB', ' GB', ' TB']:
+        if b < 1024.0 or u == ' PB':
+            break
+        b /= 1024.0
+    return f"{b:.2f} {u}"
+    
+def getFileSize():
+    path = bpy.data.filepath
+    if path:
+        return readsize(os.path.getsize(path))
+    else:
+        return None
     
 def getVersionStr():
     verTup = bpy.app.version
@@ -336,9 +143,148 @@ def getActiveObject():
     else:
         return ""
 
-class RpcPreferences(bpy.types.AddonPreferences):
+def updatePresence():
+    stateText = None
+    detailsText = None
+    smallIcon = None
+    smallIconText = None
+    
+    # Addon Preferences
+    prefs = bpy.context.preferences.addons[__name__].preferences
+    
+    if prefs.generalEnable:
+        bpi.timer = prefs.generalUpdate
+        
+        # LARGE ICON
+        if prefs.displayVersion:
+            if prefs.displayEngine:
+                largeIconText = getRenderEngineStr() + " in " + getVersionStr()
+            else:
+                largeIconText = getVersionStr()
+        else:
+            if prefs.displayEngine:
+                largeIconText = getRenderEngineStr()
+            else:
+                largeIconText = None
+
+        # SMALL ICON
+        if prefs.displayMode and bpy.context.mode:
+        
+            modes = {
+                "OBJECT": ["Object Mode", "object"],
+                "EDIT_": ["Edit Mode", "edit"],
+                "POSE": ["Pose Mode", "pose"],
+                "SCULPT": ["Sculpt Mode", "sculpt"],
+                "PAINT_GPENCIL": ["Draw Mode", "paint_gpencil"],
+                "PAINT_TEXTURE": ["Texture Paint Mode", "texture_paint"],
+                "PAINT_VERTEX": ["Vertex Paint Mode", "vertex_paint"],
+                "PAINT_WEIGHT": ["Weight Paint Mode", "weight_paint"],
+                "PARTICLE": ["Particle Edit Mode", "weight_paint"],
+            }
+            
+            activeMode = bpy.context.mode
+            
+            for i in modes:
+                if i in activeMode:
+                    smallIconText = modes[i][0]
+                    smallIcon = modes[i][1]
+                
+        # DETAILS AND STATE
+        if bpi.isRendering:
+            smallIcon = "render"
+            if prefs.displayRenderStats:
+                smallIconText = f"Rendering... {bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}"
+            else:
+                smallIconText = None
+                
+            # Rendering Details
+            if prefs.enableDetails:
+                if prefs.detailsType == "literal":
+                    if prefs.displayFileName and getFileName():
+                        detailsText = f"Rendering {getFileName()}.blend"
+                    else:
+                        detailsText = f"Rendering a project"
+                else:
+                    detailsText = str(prefs.detailsCustomText)
+                
+            # Rendering State
+            if bpi.renderedFrames > 0:
+                frameRange = getFrameRange()
+                if prefs.displayRenderStats:
+                    smallIconText = f"Rendering... {bpy.context.scene.render.resolution_x}x{bpy.context.scene.render.resolution_y}@{bpy.context.scene.render.fps}fps"
+                else:
+                    smallIconText = None
+                if prefs.displayFrames:
+                    percent=(frameRange[0]/frameRange[1])*100
+                    stateText = f"Frame {frameRange[0]} of {frameRange[1]} ({'{:.2f}%'.format(percent)})"
+            else:
+                if prefs.enableState and prefs.displayFrames:
+                    stateText = f"Frame {bpy.context.scene.frame_current}"
+        else: # NOT RENDERING
+            if prefs.enableDetails:
+                if prefs.detailsType == "literal":
+                    if prefs.displayFileName and getFileName():
+                        detailsText = f"{getFileName()}.blend"
+                    else:
+                        detailsText = "Working on a project"
+                else:
+                    detailsText = evalCustomText(prefs.detailsCustomText)
+            else:
+                detailsText = "  "
+            
+            # Viewport State      
+            displayTypes = {
+                "custom" : evalCustomText,
+                "obj" : getObjectCount,
+                "poly" : getPolyCount,
+                "bone" : getBoneCount,
+                "mat" : getMatCount,
+                "frame" : getCurrentFrame,
+                "anim" : getFramesAnimated,
+                "size" : getFileSize,
+                "active" : getActiveObject,
+            }
+            
+        try:
+            if prefs.stateType == "custom":
+                stateText = evalCustomText(prefs.stateCustomText)
+            else:
+                stateText = displayTypes[prefs.stateType]()
+        except KeyError as e:
+            print("[BP] ERROR: " + e)
+
+        # Time Elapsed
+        if prefs.enableTime and not bpi.isRendering:
+            fStartTime = bpi.startTime
+        elif prefs.enableTime and bpi.isRendering:
+            fStartTime = bpi.startTime
+        else:
+            fStartTime = None
+
+        # Push to RPC
+        if bpi.connected:
+            try:
+                rpcClient.update(
+                    start=fStartTime,
+                    state=stateText,
+                    details=detailsText,
+                    small_image=smallIcon,
+                    small_text=smallIconText,
+                    large_image='blenderlogo',
+                    large_text=largeIconText,
+                )
+            except exceptions.InvalidID or AssertionError:
+                bpi.connected = False
+                print("[BP] I lost connection to Discord RPC! Re-connecting...")
+                bpi.connected = connectRPC()
+        else:
+            print("[BP] Retrying...")
+            bpi.connected = connectRPC()
+
+class blendPresence(bpy.types.AddonPreferences):
     bl_idname = __name__
-    ## GENERAL SETTINGS
+    
+    # GENERAL SETTINGS
     generalEnable: bpy.props.BoolProperty(
         name = "Enabled",
         description = "Enable Discord Rich Presence",
@@ -347,13 +293,13 @@ class RpcPreferences(bpy.types.AddonPreferences):
     
     generalUpdate: bpy.props.IntProperty(
         name = "Update Every",
-        description = "How long the presence will update in seconds. A value of 5 is recommended",
+        description = "How long the presence will update in seconds. Faster update rates may affect performance.",
         default = 5,
         min = 1,
         max = 60
     )
     
-    ## LARGE ICON TOOLTIP
+    # LARGE ICON TOOLTIP
     displayEngine: bpy.props.BoolProperty(
         name = "Render Engine",
         description = "Displays the current render engine",
@@ -366,7 +312,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
         default = True,
     )
     
-    ## SMALL ICON TOOLTIP
+    # SMALL ICON TOOLTIP
     displayMode: bpy.props.BoolProperty(
         name = "Active Mode",
         description = "Displays the current mode (Object, Edit, Pose, etc.) from the 3D Viewport",
@@ -379,7 +325,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
         default = True,
     )
     
-    ## DETAILS
+    # DETAILS
     enableDetails: bpy.props.BoolProperty(
         name = "Enabled",
         description = "Enables 'details' property. This is the top-most piece of text shown in the presence",
@@ -397,7 +343,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
     
     displayFileName: bpy.props.BoolProperty(
         name = "Display File Name",
-        description = "Replace literal string to your .blend file name (ex. 'project.blend')",
+        description = "Replace literal string to your .blend file name (ex. 'project.blend'). Your project must be saved to a file in order for this to work.",
         default = False,
     )
     
@@ -413,7 +359,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
         default = True,
     )
     
-    ## STATE
+    # STATE
     enableState: bpy.props.BoolProperty(
         name = "Enabled",
         description = "Enables 'state' property. This is the middle piece of text shown in the presence",
@@ -448,7 +394,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
         default = False,
     )
     
-    ## TIME ELAPSED
+    # TIME ELAPSED
     enableTime: bpy.props.BoolProperty(
         name = "Enabled",
         description = "Displays the total amount of time elapsed since the plugin was enabled",
@@ -461,6 +407,7 @@ class RpcPreferences(bpy.types.AddonPreferences):
         default = True,
     )
 
+    # INTERFACE
     def draw(self, context):
         prefs = bpy.context.preferences.addons[__name__].preferences
 
@@ -528,3 +475,25 @@ class RpcPreferences(bpy.types.AddonPreferences):
             if prefs.enableTime:
                 boxTmSettings = boxTm.column()
                 boxTmSettings.prop(self, "resetTimer")
+                
+def register():
+    bpy.utils.register_class(blendPresence)
+    bpi.startTime = time.time()
+    bpi.connected = connectRPC()
+    bpy.app.timers.register(updatePresenceTimer, first_interval=1.0, persistent=True)
+    
+    bpy.app.handlers.render_init.append(startRenderJobHandler)
+    bpy.app.handlers.render_complete.append(endRenderJobHandler)
+    bpy.app.handlers.render_cancel.append(endRenderJobHandler)
+    bpy.app.handlers.render_post.append(postRenderHandler)
+
+def unregister():
+    bpi.startTime = time.time()
+    rpcClient.close()
+    bpy.app.timers.unregister(updatePresenceTimer)
+    bpy.utils.unregister_class(blendPresence)
+    
+    bpy.app.handlers.render_init.remove(startRenderJobHandler)
+    bpy.app.handlers.render_complete.remove(endRenderJobHandler)
+    bpy.app.handlers.render_cancel.remove(endRenderJobHandler)
+    bpy.app.handlers.render_post.remove(postRenderHandler)
