@@ -244,14 +244,15 @@ def updatePresence():
                 "size" : getFileSize,
                 "active" : getActiveObject,
             }
-            
-        try:
-            if prefs.stateType == "custom":
-                stateText = evalCustomText(prefs.stateCustomText)
-            else:
-                stateText = displayTypes[prefs.stateType]()
-        except KeyError as e:
-            print("[BP] ERROR: " + e)
+        
+        if not bpi.isRendering: # Render state will always override this
+            try:
+                if prefs.stateType == "custom":
+                    stateText = evalCustomText(prefs.stateCustomText)
+                else:
+                    stateText = displayTypes[prefs.stateType]()
+            except KeyError as e:
+                print("[BP] ERROR: " + e)
 
         # Time Elapsed
         if prefs.enableTime and not bpi.isRendering:
