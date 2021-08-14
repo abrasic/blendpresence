@@ -27,7 +27,7 @@ namespace WinInstaller
         }
 
         private string blenderDir = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\Blender Foundation\\Blender";
-        private string latestDownload = "https://github.com/robiot/blendpresence/archive/refs/heads/main.zip";
+        private string latestDownload = "https://github.com/abrasic/blendpresence/archive/refs/heads/main.zip";
         private string downloadFolder = $"tmpDownload";
 
         private void Main_Load(object sender, EventArgs e)
@@ -131,7 +131,7 @@ namespace WinInstaller
             }
 
 
-            if (CopyFiles($"{downloadFolder}\\main\\blendpresence-main", blendpresenceDir) == -1)
+            if (CopyFiles($"{downloadFolder}\\main\\blendpresence-main\\BlendPresence", blendpresenceDir) == -1)
             {
                 status("Installation Failed");
                 InstallButton.Enabled = true;
