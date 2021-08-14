@@ -1,5 +1,3 @@
-### Do NOT download from the repo! Please download the latest version from Releases!
-
 # BlendPresence
 A personalized Blender plugin fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
 **This addon supports 2.9x branches and probably 3.0**
@@ -9,10 +7,23 @@ BlendPresence is an addon for Blender 2.9x that shows off what you're doing in b
 ![Example 1](https://i.imgur.com/VNkXDN7.png?maxwidth=437)
 
 ## Installation
-1. Download Python if you haven't yet: https://www.python.org/.
-2. Download the [latest version](https://github.com/abrasic/blendpresence/releases). DO NOT UNZIP THE FILE!
-3. In Blender go to **Edit > Preferences > Addons > Install** and select the downloaded zip file.
-4. Enable the plugin and customize settings via add-on preferences.
+
+### Windows:
+1. Go to the [Latest Release](../../releases/latest)
+2. Download WinInstaller (When starting it you may get a blue popup, just press advanced and run anyways (this is because the app isn't commonly downloaded))
+3. Select Your Blender Version To The Right, Then Click Install (This Will Download The Latest Version)
+4. Go Into Blender, Click Edit, Then Preferences. Then Click add-ons And Search Up "blendpresence" and enable it.
+
+To update it you can just press install in WinInstaller.
+### Other Operating Systems
+*You can also do this if you want to download blendpresence manually on windows*
+1. Go to the main page and click the green "Code" button.
+2. Click download as zip, and then extract it.
+3. Add "BlendPresence" into a zip archive.
+4. Go into blender, click edit, click preferences, go to add-ons. Click Install, and select the zipfile.
+
+You will need to do this everytime you want to update the plugin.
+
 
 ## Troubleshooting
 If the Rich Presence is not displaying, try the following:
