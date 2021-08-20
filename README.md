@@ -8,29 +8,18 @@ BlendPresence is an addon for Blender 2.9x that shows off what you're doing in b
 
 ## Installation
 
-### Windows:
-1. Go to the [Latest Release](../../releases/latest)
-2. Download WinInstaller (When starting it you may get a blue popup, just press advanced and run anyways (this is because the app isn't commonly downloaded))
-3. Select Your Blender Version To The Right, Then Click Install (This Will Download The Latest Version)
-4. Go Into Blender, Click Edit, Then Preferences. Then Click add-ons And Search Up "blendpresence" and enable it.
+1. Go to the [Latest Release](../../releases/latest). DON'T UNZIP THE FILE!
+2. In blender, Go to `Edit > Preferences > Add-ons`. Click `Install...`, and select the zipfile.
 
-To update it you can just press install in WinInstaller.
-### Other Operating Systems
-*You can also do this if you want to download blendpresence manually on windows*
-1. Go to the main page and click the green "Code" button.
-2. Click download as zip, and then extract it.
-3. Add "BlendPresence" into a zip archive.
-4. Go into blender, click edit, click preferences, go to add-ons. Click Install, and select the zipfile.
+## Updating
 
-You will need to do this everytime you want to update the plugin.
-
+1. Select the `BlendPresence` dropdown in the add-ons menu and click `Remove...` - repeat the steps above.
 
 ## Troubleshooting
 
 If the Rich Presence is not displaying, try the following:
 * In Discord, go to your **User Settings > Activity Status > Display current activity as a status message** and make sure it's _enabled_.
 * It could be a display bug. Refresh the Discord client by pressing `Ctrl+R`
-   * **At this time, BlendPresence will not automatically re-connect if you refresh your Discord client. You will need to re-enable the addon if you want to make it reappear after a Discord update or refresh.**
 * It could be a bug with the addon. Try re-enabling it or go to `Window > Toggle System Console` and ensure no errors from BlendPresence appear.
 
 ## Customizable Features
