@@ -6,7 +6,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.9x",
     "author": "Abrasic",
-    "version": (1, 5, 0),
+    "version": (1, 5, 1),
     "blender": (2, 90, 1),
     "category": "System",
 }
