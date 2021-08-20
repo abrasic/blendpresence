@@ -9,7 +9,7 @@ BlendPresence is an addon for Blender 2.9x that shows off what you're doing in b
 ## Installation
 
 1. Go to the [Latest Release](../../releases/latest). DON'T UNZIP THE FILE!
-2. In blender, Go to `Edit > Preferences > Add-ons`. Click `Install...`, and select the zipfile.
+2. Open Blender, then go to `Edit > Preferences > Add-ons`. Click `Install...`, and select the zipfile.
 
 ## Updating
 
