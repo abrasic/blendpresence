@@ -179,7 +179,7 @@ def updatePresence():
                 "PAINT_TEXTURE": ["Texture Paint Mode", "texture_paint"],
                 "PAINT_VERTEX": ["Vertex Paint Mode", "vertex_paint"],
                 "PAINT_WEIGHT": ["Weight Paint Mode", "weight_paint"],
-                "PARTICLE": ["Particle Edit Mode", "weight_paint"],
+                "PARTICLE": ["Particle Edit Mode", "particle_edit"],
             }
             
             activeMode = bpy.context.mode
