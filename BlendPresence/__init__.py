@@ -281,6 +281,9 @@ def updatePresence():
         else:
             print("[BP] Retrying...")
             bpi.connected = connectRPC()
+    else:
+        rpcClient.clear()
+        bpi.connected = False
 
 class blendPresence(bpy.types.AddonPreferences):
     bl_idname = __name__
