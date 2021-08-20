@@ -1,5 +1,3 @@
-### Do NOT download from the repo! Please download the latest version from Releases!
-
 # BlendPresence
 A personalized Blender plugin fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
 **This addon supports 2.9x branches and probably 3.0**
@@ -9,12 +7,16 @@ BlendPresence is an addon for Blender 2.9x that shows off what you're doing in b
 ![Example 1](https://i.imgur.com/VNkXDN7.png?maxwidth=437)
 
 ## Installation
-1. Download Python if you haven't yet: https://www.python.org/.
-2. Download the [latest version](https://github.com/abrasic/blendpresence/releases). DO NOT UNZIP THE FILE!
-3. In Blender go to **Edit > Preferences > Addons > Install** and select the downloaded zip file.
-4. Enable the plugin and customize settings via add-on preferences.
+
+1. Go to the [Latest Release](../../releases/latest). DON'T UNZIP THE FILE!
+2. Open Blender, then go to `Edit > Preferences > Add-ons`. Click `Install...`, and select the zipfile.
+
+## Updating
+
+1. Select the `BlendPresence` dropdown in the add-ons menu and click `Remove...` - repeat the steps above.
 
 ## Troubleshooting
+
 If the Rich Presence is not displaying, try the following:
 * In Discord, go to your **User Settings > Activity Status > Display current activity as a status message** and make sure it's _enabled_.
 * It could be a display bug. Refresh the Discord client by pressing `Ctrl+R`
