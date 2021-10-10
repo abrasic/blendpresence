@@ -6,7 +6,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender 2.9x",
     "author": "Abrasic",
-    "version": (1, 5, 1),
+    "version": (1, 5, 2),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -34,6 +34,7 @@ class bpi:
     renderedFrames = 0
     timer = 5
 
+# HANDLERS
 @bpy.app.handlers.persistent
 def startRenderJobHandler(*args):
     bpi.isRendering = True
@@ -53,6 +54,7 @@ def endRenderJobHandler(*args):
 def postRenderHandler(*args):
     bpi.renderedFrames += 1
     
+# FUNCTIONS
 def updatePresenceTimer():
     updatePresence()
     return bpi.timer
@@ -69,16 +71,16 @@ def getObjectCount():
     
 def getPolyCount():
     count = 0
-    for element in bpy.context.scene.objects:
-        if element.type == "MESH":
-            count += len(element.data.polygons)
+    for e in bpy.context.scene.objects:
+        if e.type == "MESH":
+            count += len(e.data.polygons)
     return f"{count:,d} total polys"
 
 def getBoneCount():
     count = 0
-    for element in bpy.context.scene.objects:
-        if element.type == "ARMATURE":
-            count += len(element.data.bones)
+    for e in bpy.context.scene.objects:
+        if e.type == "ARMATURE":
+            count += len(e.data.bones)
     return f"Working with {count:,d} bones"
     
 def getMatCount():
@@ -115,21 +117,31 @@ def readsize(b):
     return f"{b:.2f} {u}"
     
 def getFileSize():
-    path = bpy.data.filepath
-    if path:
-        return readsize(os.path.getsize(path))
+    p = bpy.data.filepath
+    if p:
+        return readsize(os.path.getsize(p))
     else:
         return None
     
 def getVersionStr():
-    verTup = bpy.app.version
-    verChar = bpy.app.version_char
-    return f"{verTup[0]}.{verTup[1]}.{verTup[2]}{verChar}"
+    ver = bpy.app.version
+    verC = bpy.app.version_char
+    return f"{ver[0]}.{ver[1]}.{ver[2]}{verC}"
 
 def getRenderEngineStr():
-    internalName = bpy.context.engine
-    internalNameStripped = internalName.replace("BLENDER_", "").replace("_", " ")
-    return internalNameStripped.title() + " Engine"
+    i = bpy.context.engine
+    unique = [ # Engines with unique names
+        ["PRMAN_RENDER", "Renderman"],
+        ["LUXCORE", "LuxCore"]
+    ]
+
+    for e in unique:
+        if e[0] == i:
+            return e[1]
+
+    # If this function hasn't returned yet, use this generic string:
+    iformat = i.replace("BLENDER_", "").replace("_", " ")
+    return iformat.title()
 
 def getFrameRange():
     start = bpy.context.scene.frame_start
@@ -141,13 +153,15 @@ def getActiveObject():
     if bpy.context.active_object:
         return bpy.context.active_object.name
     else:
-        return ""
+        return "  "
 
+######## PRESENCE ########
 def updatePresence():
     stateText = None
     detailsText = None
     smallIcon = None
     smallIconText = None
+    largeIcon = 'blenderlogo'
     
     # Addon Preferences
     prefs = bpy.context.preferences.addons[__name__].preferences
@@ -158,7 +172,15 @@ def updatePresence():
         # LARGE ICON
         if prefs.displayVersion:
             if prefs.displayEngine:
-                largeIconText = getRenderEngineStr() + " in " + getVersionStr()
+
+                engines = ['Redshift', 'Renderman', 'LuxCore']
+                current_engine = getRenderEngineStr()
+                for e in engines:
+                    if e == current_engine:
+                        largeIcon = "blender_"+e.lower()
+                        break
+
+                largeIconText = getRenderEngineStr() + " Engine in " + getVersionStr()
             else:
                 largeIconText = getVersionStr()
         else:
@@ -271,7 +293,7 @@ def updatePresence():
                     details=detailsText,
                     small_image=smallIcon,
                     small_text=smallIconText,
-                    large_image='blenderlogo',
+                    large_image=largeIcon,
                     large_text=largeIconText,
                 )
             except exceptions.InvalidID or AssertionError:
@@ -285,6 +307,7 @@ def updatePresence():
         rpcClient.clear()
         bpi.connected = False
 
+# PREFERENCES
 class blendPresence(bpy.types.AddonPreferences):
     bl_idname = __name__
     
@@ -306,7 +329,7 @@ class blendPresence(bpy.types.AddonPreferences):
     # LARGE ICON TOOLTIP
     displayEngine: bpy.props.BoolProperty(
         name = "Render Engine",
-        description = "Displays the current render engine",
+        description = "Displays the active render engine logo (if supported) on the large icon, as well as in the large icon text",
         default = True,
     )
 
@@ -479,7 +502,8 @@ class blendPresence(bpy.types.AddonPreferences):
             if prefs.enableTime:
                 boxTmSettings = boxTm.column()
                 boxTmSettings.prop(self, "resetTimer")
-                
+
+# REGISTRATION     
 def register():
     bpy.utils.register_class(blendPresence)
     bpi.startTime = time.time()
