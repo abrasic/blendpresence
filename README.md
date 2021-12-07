@@ -1,8 +1,8 @@
 # BlendPresence
 A personalized Blender plugin fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
-**This addon supports 2.9x branches and probably 3.0**
+**This addon supports 2.9 and 3.0**
 
-BlendPresence is an addon for Blender 2.9x that shows off what you're doing in blender using the power of Discord's Rich Presence. It can display various statistics including the .blend file name, render engine, and what mode you're currently using in the 3D Viewport. While rendering, you can also display the count of frames rendered and frame resolution. It is completely customizable too!
+BlendPresence is an addon for Blender 2.9 and 3.0 that shows off what you're doing in blender using the power of Discord's Rich Presence. It can display various statistics including the .blend file name, render engine, and what mode you're currently using in the 3D Viewport. While rendering, you can also display the count of frames rendered and frame resolution. It is completely customizable too!
 
 ![Example 1](https://i.imgur.com/VNkXDN7.png?maxwidth=437)
 
