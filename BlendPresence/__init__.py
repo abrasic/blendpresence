@@ -1,12 +1,12 @@
-import bpy, os, time, math
+import bpy, os, time, math, re
 from .pypresence import Presence
 from .pypresence import exceptions
 
 bl_info = {
     "name": "BlendPresence",
-    "description": "Discord Rich Presence for Blender 2.9x",
+    "description": "Discord Rich Presence for Blender 3.0",
     "author": "Abrasic",
-    "version": (1, 5, 2),
+    "version": (1, 6, 0),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -65,6 +65,17 @@ def evalCustomText(str):
     else:
         return "  " 
         # Details cannot be empty or less than 2 chars but for some reason this works too
+
+def evalCustomUrl(str):
+    regex = re.compile(
+            r'^(?:http|ftp)s?://' # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+            r'localhost|' #localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+            r'(?::\d+)?' # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+            
+    return re.match(regex, str) is not None
 
 def getObjectCount():
     return f"{len(bpy.context.selectable_objects):,d} total objects"
@@ -161,6 +172,7 @@ def updatePresence():
     detailsText = None
     smallIcon = None
     smallIconText = None
+    buttonList = []
     largeIcon = 'blenderlogo'
     
     # Addon Preferences
@@ -210,7 +222,17 @@ def updatePresence():
                 if i in activeMode:
                     smallIconText = modes[i][0]
                     smallIcon = modes[i][1]
-                
+        
+        # BUTTONS
+        
+        if prefs.displayBtn1 and prefs.button1Label and evalCustomUrl(prefs.button1Url):
+            buttonList.append({"label": prefs.button1Label, "url": prefs.button1Url})
+        if prefs.displayBtn2 and prefs.button2Label and evalCustomUrl(prefs.button2Url):
+            buttonList.append({"label": prefs.button2Label, "url": prefs.button2Url})
+        if not buttonList:
+            buttonList = None
+            
+        
         # DETAILS AND STATE
         if bpi.isRendering:
             smallIcon = "render"
@@ -295,6 +317,7 @@ def updatePresence():
                     small_text=smallIconText,
                     large_image=largeIcon,
                     large_text=largeIconText,
+                    buttons=buttonList
                 )
             except exceptions.InvalidID or AssertionError:
                 bpi.connected = False
@@ -352,6 +375,43 @@ class blendPresence(bpy.types.AddonPreferences):
         default = True,
     )
     
+    # BUTTONS
+    displayBtn1: bpy.props.BoolProperty(
+        name = "Button 1",
+        description = "Create a button to be placed on the presence",
+        default = False,
+    )
+
+    displayBtn2: bpy.props.BoolProperty(
+        name = "Button 2",
+        description = "Create a button to be placed on the presence",
+        default = False,
+    )
+    
+    button1Label: bpy.props.StringProperty(
+        name = "Label",
+        description = "The text displayed on the button",
+        default = "",
+    )
+    
+    button1Url: bpy.props.StringProperty(
+        name = "URL",
+        description = "The full URL that users will be directed to on click. Example: 'https://google.com'",
+        default = "",
+    )
+
+    button2Label: bpy.props.StringProperty(
+        name = "Label",
+        description = "The text displayed on the button",
+        default = "",
+    )
+ 
+    button2Url: bpy.props.StringProperty(
+        name = "URL",
+        description = "The full URL that users will be directed to on click. Example: 'https://google.com'",
+        default = "",
+    )
+
     # DETAILS
     enableDetails: bpy.props.BoolProperty(
         name = "Enabled",
@@ -396,13 +456,13 @@ class blendPresence(bpy.types.AddonPreferences):
     stateType: bpy.props.EnumProperty(
         name = "Display",
         items = (
-            ("anim", "Frames Animated", "Displays the frame number that holds the last keyframe from all given actions."),
+            ("anim", "Frames Animated", "Displays the frame number that holds the last keyframe from all given actions"),
             ("poly", "Polygon Count", "Display the total amount of objects in the current scene"),
             ("bone", "Bone Count", "Display the total amount of armature bones in the current scene"),
             ("mat", "Material Count", "Display the total amount of materials in the current scene"),
             ("obj", "Object Count", "Display the total amount of objects in the current scene"),
-            ("active", "Active Object", "Display the name of the curent active object selected. If none is seleced then this will return nothing."),
-            ("frame", "Current Frame", "Display the current frame being viewed in the timeline. The text will also change if you are playing back an animation."),
+            ("active", "Active Object", "Display the name of the curent active object selected. If none is seleced then this will return nothing"),
+            ("frame", "Current Frame", "Display the current frame being viewed in the timeline. The text will also change if you are playing back an animation"),
             ("size", "File Size", "Displays the file size of your current project file. If your project is not saved, nothing will display."),
             ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
         ),
@@ -464,6 +524,18 @@ class blendPresence(bpy.types.AddonPreferences):
             boxSmlRender = boxSml.row().box()
             boxSmlRender.label(text="Rendering", icon="RENDER_STILL")
             boxSmlRender.prop(self, "displayRenderStats")
+            
+            # Buttons
+            boxBtn = colLeft.box()
+            boxBtn.label(text="Buttons", icon="SEQ_STRIP_DUPLICATE")
+            boxBtn.prop(self, "displayBtn1")
+            if prefs.displayBtn1:
+                boxBtn.prop(self, "button1Label")
+                boxBtn.prop(self, "button1Url")
+            boxBtn.prop(self, "displayBtn2")
+            if prefs.displayBtn2:
+                boxBtn.prop(self, "button2Label")
+                boxBtn.prop(self, "button2Url")
             
             # Details Text (Top)
             boxDts = colRight.box()
