@@ -34,6 +34,9 @@ If the Rich Presence is not displaying, try the following:
 - (Viewport) **Active Mode** displays the mode (Object, Edit, Pose, etc.) that the user is currently active in.
 - (Rendering) **Render Stats** displays render information such as frame resolution and FPS while rendering.
 
+### Buttons ###
+- A maximum of two buttons can be displayed at the bottom of your presence and can be personalized with any label and URL of their choosing.
+
 ### Details ###
 - **Display Types**: *Literal* is filler text that changes based on what you're doing, such as if you're rendering something, it will change to "Rendering a project". Alternatively you can set your own text by changing this setting to *Custom*
 - **Display File Name** overrides the setting above with the current .blend file name. This will only work if the file is saved onto your machine.
