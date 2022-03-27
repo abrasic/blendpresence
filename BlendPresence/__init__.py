@@ -1,12 +1,12 @@
-import bpy, os, time, math, re
+import bpy, os, gpu, time, math, re
 from .pypresence import Presence
 from .pypresence import exceptions
 
 bl_info = {
     "name": "BlendPresence",
-    "description": "Discord Rich Presence for Blender 3.0",
+    "description": "Discord Rich Presence for Blender",
     "author": "Abrasic",
-    "version": (1, 6, 0),
+    "version": (1, 7, 0),
     "blender": (2, 90, 1),
     "category": "System",
 }
@@ -33,6 +33,7 @@ class bpi:
     isRendering = False
     renderedFrames = 0
     timer = 5
+    blendGPU = gpu.platform.renderer_get()
 
 # HANDLERS
 @bpy.app.handlers.persistent
@@ -76,6 +77,10 @@ def evalCustomUrl(str):
             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
             
     return re.match(regex, str) is not None
+
+def getCurrentScene():
+    s = bpy.context.scene.name
+    return "Default Scene" if s == "Scene" else f"Scene {s}"
 
 def getObjectCount():
     return f"{len(bpy.context.selectable_objects):,d} total objects"
@@ -201,6 +206,14 @@ def updatePresence():
             else:
                 largeIconText = None
 
+        if prefs.displayGPU:
+            gpustr = bpi.blendGPU
+            if gpustr and "NVIDIA GeForce" in gpustr:
+                gpustr = gpu.platform.renderer_get()
+                gpustr = gpustr.replace("NVIDIA GeForce ","")
+                gpustr = gpustr.split("/", 1)[0]
+                largeIconText = largeIconText + " | " + gpustr
+
         # SMALL ICON
         if prefs.displayMode and bpy.context.mode:
         
@@ -279,6 +292,7 @@ def updatePresence():
             # Viewport State      
             displayTypes = {
                 "custom" : evalCustomText,
+                "scene" : getCurrentScene,
                 "obj" : getObjectCount,
                 "poly" : getPolyCount,
                 "bone" : getBoneCount,
@@ -343,7 +357,7 @@ class blendPresence(bpy.types.AddonPreferences):
     
     generalUpdate: bpy.props.IntProperty(
         name = "Update Every",
-        description = "How long the presence will update in seconds. Faster update rates may affect performance.",
+        description = "How fast the presence will update in seconds. Lower is faster. Faster update rates may affect performance",
         default = 5,
         min = 1,
         max = 60
@@ -358,7 +372,7 @@ class blendPresence(bpy.types.AddonPreferences):
 
     displayVersion: bpy.props.BoolProperty(
         name = "Blender Version",
-        description = "Displays the version of Blender software",
+        description = "Displays Blender version",
         default = True,
     )
     
@@ -375,6 +389,11 @@ class blendPresence(bpy.types.AddonPreferences):
         default = True,
     )
     
+    displayGPU: bpy.props.BoolProperty(
+        name = "Display GPU",
+        description = "Displays the name of the GPU being used by Blender",
+        default = False,
+    )
     # BUTTONS
     displayBtn1: bpy.props.BoolProperty(
         name = "Button 1",
@@ -422,7 +441,7 @@ class blendPresence(bpy.types.AddonPreferences):
     detailsType: bpy.props.EnumProperty(
         name = "Display",
         items = (
-            ("literal", "Literal", "Changes depending on what you're doing (ex. while rendering it will display 'Rendering a project'"),
+            ("literal", "Literal", "Changes depending on what you're doing (ex. while rendering, it will display 'Rendering a project')"),
             ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
         ),
         default = "literal",
@@ -430,7 +449,7 @@ class blendPresence(bpy.types.AddonPreferences):
     
     displayFileName: bpy.props.BoolProperty(
         name = "Display File Name",
-        description = "Replace literal string to your .blend file name (ex. 'project.blend'). Your project must be saved to a file in order for this to work.",
+        description = "Replace literal string to your .blend file name (ex. 'project.blend'). Your project must be saved to a file in order for this to work",
         default = False,
     )
     
@@ -461,9 +480,10 @@ class blendPresence(bpy.types.AddonPreferences):
             ("bone", "Bone Count", "Display the total amount of armature bones in the current scene"),
             ("mat", "Material Count", "Display the total amount of materials in the current scene"),
             ("obj", "Object Count", "Display the total amount of objects in the current scene"),
+            ("scene", "Current Scene", "Returns the name of the current scene"),
             ("active", "Active Object", "Display the name of the curent active object selected. If none is seleced then this will return nothing"),
             ("frame", "Current Frame", "Display the current frame being viewed in the timeline. The text will also change if you are playing back an animation"),
-            ("size", "File Size", "Displays the file size of your current project file. If your project is not saved, nothing will display."),
+            ("size", "File Size", "Displays the file size of your current project file. If your project is not saved, nothing will display"),
             ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
         ),
         default = "custom",
@@ -514,6 +534,7 @@ class blendPresence(bpy.types.AddonPreferences):
             boxLrg.label(text="Large Icon Tooltip", icon="BLENDER")
             boxLrg.prop(self, "displayEngine")
             boxLrg.prop(self, "displayVersion")
+            boxLrg.prop(self, "displayGPU")
 
             # Small Icon Tooltip
             boxSml = boxLrg.box()
