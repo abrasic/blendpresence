@@ -29,6 +29,7 @@ If the Rich Presence is not displaying, try the following:
 ### Large Icon Tooltip ###
 - **Render Engine** displays the render engine that's currently in use by the user. This should work with most other third-party render engines such as Octane and Redshift.
 - **Blender Version** displays Blender version that the addon is running in.
+- **Display GPU** displays the name of the GPU Blender is using.
 
 ### Small Icon ###
 - (Viewport) **Active Mode** displays the mode (Object, Edit, Pose, etc.) that the user is currently active in.
