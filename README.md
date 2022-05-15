@@ -1,5 +1,7 @@
 # BlendPresence
 This is an addon for Blender that allows you to show off what you're doing in Discord using Rich Presence.
+
+**BlendPresence currently supports versions 2.93 and higher.**
 <p align="center">
   <img src="https://i.ibb.co/w07qJfX/Screenshot-2.png" height="300px">
 </p>
