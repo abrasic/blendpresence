@@ -6,8 +6,8 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender",
     "author": "Abrasic",
-    "version": (1, 7, 0),
-    "blender": (2, 90, 1),
+    "version": (1, 7, 1),
+    "blender": (2, 93, 9),
     "category": "System",
 }
 
@@ -33,7 +33,14 @@ class bpi:
     isRendering = False
     renderedFrames = 0
     timer = 5
-    blendGPU = gpu.platform.renderer_get()
+
+    if bpy.app.version[0] == 2 and bpy.app.version[1] == 93:
+        blendGPU = bpy.context.preferences.addons['cycles'].preferences.devices[0].name
+    elif bpy.app.version[0] == 3 and bpy.app.version[1] >= 0:
+        blendGPU = gpu.platform.renderer_get()
+    else:
+        blendGPU = ""
+        print("[BP] This version of Blender does not support 'Display GPU'.")
 
 # HANDLERS
 @bpy.app.handlers.persistent
@@ -209,7 +216,6 @@ def updatePresence():
         if prefs.displayGPU:
             gpustr = bpi.blendGPU
             if gpustr and "NVIDIA GeForce" in gpustr:
-                gpustr = gpu.platform.renderer_get()
                 gpustr = gpustr.replace("NVIDIA GeForce ","")
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
@@ -244,7 +250,6 @@ def updatePresence():
             buttonList.append({"label": prefs.button2Label, "url": prefs.button2Url})
         if not buttonList:
             buttonList = None
-            
         
         # DETAILS AND STATE
         if bpi.isRendering:
