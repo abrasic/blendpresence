@@ -1,11 +1,29 @@
 # BlendPresence
-A personalized Blender plugin fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
-**This addon supports 2.9, 3.0 and 3.1**
+This is an addon for Blender that allows you to show off what you're doing in Discord using Rich Presence.
+<p align="center">
+  <img src="https://i.ibb.co/w07qJfX/Screenshot-2.png" height="300px">
+</p>
 
-BlendPresence is an addon for Blender that shows off what you're doing in blender using the power of Discord's Rich Presence. It can display various statistics including the .blend file name, render engine, and what mode you're currently using in the 3D Viewport. While rendering, you can also display the count of frames rendered and frame resolution. It is completely customizable too!
 
-![Example 1](https://i.imgur.com/VNkXDN7.png?maxwidth=437)
+# Features
 
+<p align="center">
+  <img src="https://abx.gg/i/buttons.gif" height="180px">
+</p>
+
+* Up to two customizable buttons, redirecting to a link of your choice (portfolio, website, etc)
+* Crrent Blender version
+* Active render engine name
+* Name of current GPU in use
+* Current mode (object, edit, pose, etc)
+* Render stats while rendering (current frame and percentage complete)
+* Other context-sensitive features like:
+   - Number of current frame
+   - Name of current scene
+   - Name of current object selected
+   - Number of bones/polys/materials in the scene
+   - And more
+   
 ## Installation
 
 1. Go to the [Latest Release](../../releases/latest) and download the blendpresence.zip file. DON'T UNZIP IT!
@@ -37,6 +55,7 @@ If the Rich Presence is not displaying, try the following:
 
 ### Buttons ###
 - A maximum of two buttons can be displayed at the bottom of your presence and can be personalized with any label and URL of their choosing.
+   - **Important: The link MUST start with a protocol (`https://`)**
 
 ### Details ###
 - **Display Types**: *Literal* is filler text that changes based on what you're doing, such as if you're rendering something, it will change to "Rendering a project". Alternatively you can set your own text by changing this setting to *Custom*
@@ -48,3 +67,5 @@ If the Rich Presence is not displaying, try the following:
 
 ### Time Elapsed ###
 - **Reset on Render** will reset the timer when a render starts.
+
+This plugin is a modified fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
