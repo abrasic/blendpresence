@@ -446,7 +446,7 @@ class blendPresence(bpy.types.AddonPreferences):
     detailsType: bpy.props.EnumProperty(
         name = "Display",
         items = (
-            ("literal", "Literal", "Changes depending on what you're doing (ex. while rendering, it will display 'Rendering a project')"),
+            ("literal", "Literal", "Changes depending on what you're doing (ex. while rendering, it will display 'Rendering a project'"),
             ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
         ),
         default = "literal",
