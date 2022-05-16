@@ -14,7 +14,7 @@ This is an addon for Blender that allows you to show off what you're doing in Di
 </p>
 
 * Up to two customizable buttons, redirecting to a link of your choice (portfolio, website, etc)
-* Crrent Blender version
+* Current Blender version
 * Active render engine name
 * Name of current GPU in use
 * Current mode (object, edit, pose, etc)
