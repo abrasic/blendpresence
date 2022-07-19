@@ -38,7 +38,7 @@ This is an addon for Blender that allows you to show off what you're doing in Di
 ## Troubleshooting
 
 If the Rich Presence is not displaying, try the following:
-* In Discord, go to your **User Settings > Activity Status > Display current activity as a status message** and make sure it's _enabled_.
+* In Discord, go to your **User Settings > Activity Privacy > Display current activity as a status message** and make sure it's _enabled_.
 * It could be a display bug. Refresh the Discord client by pressing `Ctrl+R`
 * It could be a bug with the addon. Try re-enabling it or go to `Window > Toggle System Console` and ensure no errors from BlendPresence appear.
 
