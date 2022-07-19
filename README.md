@@ -44,12 +44,16 @@ If the Rich Presence is not displaying, try the following:
 
 ## Customizable Features
 ### Core ###
-- **Update Every** determines how fast BlendPresence should update your presence in [x] seconds. Use small values at your own risk as this may cost you more performance.
-
+- **Enabled** determines if your rich presence will be shown on Discord.
+- **Update Every** determines how fast BlendPresence will update your presence in [x] seconds. Lower is faster.
+   * Faster update rates may affect performance on lower-end machines. A recommended value is 5 seconds.
+   
 ### Large Icon Tooltip ###
-- **Render Engine** displays the render engine that's currently in use by the user. This should work with most other third-party render engines such as Octane and Redshift.
+- **Render Engine** displays the render engine (Cycles, EEVEE, etc.) that's currently in use.
+  * Some third-party render engines like Octane or Redshift will show their unique logo aside the blender logo while used.
 - **Blender Version** displays Blender version that the addon is running in.
 - **Display GPU** displays the name of the GPU Blender is using.
+  * Currently, only NVIDIA cards are supported. Support for AMD, Intel and Apple cards may happen in the future.
 
 ### Small Icon ###
 - (Viewport) **Active Mode** displays the mode (Object, Edit, Pose, etc.) that the user is currently active in.
@@ -57,17 +61,26 @@ If the Rich Presence is not displaying, try the following:
 
 ### Buttons ###
 - A maximum of two buttons can be displayed at the bottom of your presence and can be personalized with any label and URL of their choosing.
-   - **Important: The link MUST start with a protocol (`https://`)**
+   - **IMPORTANT!** The link MUST start with a protocol (`https://`)!
 
 ### Details ###
 - **Display Types**: *Literal* is filler text that changes based on what you're doing, such as if you're rendering something, it will change to "Rendering a project". Alternatively you can set your own text by changing this setting to *Custom*
-- **Display File Name** overrides the setting above with the current .blend file name. This will only work if the file is saved onto your machine.
+- **Display File Name** overrides the setting above with the current .blend file name. 
+  * This will only work on saved files. If nothing shows up, you need to save your .blend file first.
 
 ### State ###
-- (Viewport) **Display Types**: There are several object types that you can display in the presence, including objects, faces, bones, materials and keyframes. It can also fetch the current frame you're viewing, or you can also set your own text in this field.
+- (Viewport) **Display Types**: There are several object types that you can display in the presence, such as:
+    * **File Size**: Displays the formatted file size of the current file.
+    * **Current Frame**: Returns the frame number currently on the playhead.
+    * **Active Object**: Returns the name of the active object.
+    * **Current Scecne**: Returns the name of the current scene.
+    * **Active Object**: Returns the name of the active object.
+    * **Object/Bone/Material/Polygon Count**: Returns the number of specified objects in the current scene.
+    * **Custom**: Allows the user to input their custom text.
 - (Rendering) **Frame Range** will display the current frame number that you're rendering. If it's an animation, it will fetch the frame range that's being rendered
 
 ### Time Elapsed ###
+- **Enabled** will show the amount of time elapsed upon the addon being enabled. If you restart the addon, this timer resets.
 - **Reset on Render** will reset the timer when a render starts.
 
 This plugin is a modified fork from [Protinon/Blender-rpc](https://github.com/Protinon/Blender-rpc)
