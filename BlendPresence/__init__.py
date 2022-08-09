@@ -6,7 +6,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender",
     "author": "Abrasic",
-    "version": (1, 7, 1),
+    "version": (1, 8, 0),
     "blender": (2, 93, 9),
     "category": "System",
 }
@@ -219,28 +219,54 @@ def updatePresence():
                 gpustr = gpustr.replace("NVIDIA GeForce ","")
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
+            elif gpustr and "AMD Radeon" in gpustr:
+                gpustr = gpustr.replace("AMD Radeon ","")
+                gpustr = gpustr.split("/", 1)[0]
+                largeIconText = largeIconText + " | " + gpustr
 
         # SMALL ICON
-        if prefs.displayMode and bpy.context.mode:
-        
-            modes = {
-                "OBJECT": ["Object Mode", "object"],
-                "EDIT_": ["Edit Mode", "edit"],
-                "POSE": ["Pose Mode", "pose"],
-                "SCULPT": ["Sculpt Mode", "sculpt"],
-                "PAINT_GPENCIL": ["Draw Mode", "paint_gpencil"],
-                "PAINT_TEXTURE": ["Texture Paint Mode", "texture_paint"],
-                "PAINT_VERTEX": ["Vertex Paint Mode", "vertex_paint"],
-                "PAINT_WEIGHT": ["Weight Paint Mode", "weight_paint"],
-                "PARTICLE": ["Particle Edit Mode", "particle_edit"],
-            }
+        if prefs.displaySmallIcon:
+            if prefs.iconSet == "mode" and bpy.context.mode:
             
-            activeMode = bpy.context.mode
-            
-            for i in modes:
-                if i in activeMode:
-                    smallIconText = modes[i][0]
-                    smallIcon = modes[i][1]
+                modes = {
+                    "OBJECT": ["Object Mode", "object"],
+                    "EDIT_": ["Edit Mode", "edit"],
+                    "POSE": ["Pose Mode", "pose"],
+                    "SCULPT": ["Sculpt Mode", "sculpt"],
+                    "PAINT_GPENCIL": ["Draw Mode", "paint_gpencil"],
+                    "PAINT_TEXTURE": ["Texture Paint Mode", "texture_paint"],
+                    "PAINT_VERTEX": ["Vertex Paint Mode", "vertex_paint"],
+                    "PAINT_WEIGHT": ["Weight Paint Mode", "weight_paint"],
+                    "PARTICLE": ["Particle Edit Mode", "particle_edit"],
+                }
+                
+                activeMode = bpy.context.mode
+                
+                for i in modes:
+                    if i in activeMode:
+                        smallIconText = modes[i][0]
+                        smallIcon = modes[i][1]
+
+            elif prefs.iconSet == "workspace":
+                spaces = {
+                    "Modeling": ["Modeling", "modeling"],
+                    "Sculpting": ["Sculpting", "sculpt_gpencil"],
+                    "UV Editing": ["UV Editing", "uv"],
+                    "Texture Paint": ["Texture Painting", "texture_paint"],
+                    "Shading": ["Shading", "shading"],
+                    "Animation": ["Animating", "animation"],
+                    "Rendering": ["Rendering", "rendering"],
+                    "Compositing": ["Compositing", "compositing"],
+                    "Geometry Nodes": ["Geometry Nodes", "geo_nodes"],
+                    "Scripting": ["Scripting", "scripting"],
+                }
+
+                spaceName = bpy.context.workspace.name
+
+                for i in spaces:
+                    if i in spaceName:
+                        smallIconText = spaces[i][0]
+                        smallIcon = spaces[i][1]
         
         # BUTTONS
         
@@ -382,12 +408,21 @@ class blendPresence(bpy.types.AddonPreferences):
     )
     
     # SMALL ICON TOOLTIP
-    displayMode: bpy.props.BoolProperty(
-        name = "Active Mode",
-        description = "Displays the current mode (Object, Edit, Pose, etc.) from the 3D Viewport",
+    displaySmallIcon: bpy.props.BoolProperty(
+        name = "Enabled",
+        description = "Toggles the small icon",
         default = True,
     )
     
+    iconSet: bpy.props.EnumProperty(
+        name = "Icon Set",
+        items = (
+            ("mode", "Active Mode", "Icon will change based on what viewport mode you're in"),
+            ("workspace", "Active Workspace", "Icon will change based on the workspace you're in (Modelling, Animation, etc)"),
+        ),
+        default = "mode",
+    )
+
     displayRenderStats: bpy.props.BoolProperty(
         name = "Render Stats",
         description = "Displays render information such as camera resolution and FPS where applicable",
@@ -446,7 +481,7 @@ class blendPresence(bpy.types.AddonPreferences):
     detailsType: bpy.props.EnumProperty(
         name = "Display",
         items = (
-            ("literal", "Literal", "Changes depending on what you're doing (ex. while rendering, it will display 'Rendering a project'"),
+            ("literal", "Literal", "Changes depending on what you're doing (ex. while rendering, it will display 'Rendering a project')"),
             ("custom", "Custom", "A string that will display in the 'details' property. Two characters or longer"),
         ),
         default = "literal",
@@ -546,7 +581,9 @@ class blendPresence(bpy.types.AddonPreferences):
             boxSml.label(text="Small Icon", icon="PROP_CON")
             boxSmlView = boxSml.row().box()
             boxSmlView.label(text="Viewport", icon="VIEW3D")
-            boxSmlView.prop(self, "displayMode")
+            boxSmlView.prop(self, "displaySmallIcon")
+            if prefs.displaySmallIcon:
+                boxSmlView.prop(self, "iconSet")
             boxSmlRender = boxSml.row().box()
             boxSmlRender.label(text="Rendering", icon="RENDER_STILL")
             boxSmlRender.prop(self, "displayRenderStats")
