@@ -56,7 +56,9 @@ If the Rich Presence is not displaying, try the following:
   * Currently, only NVIDIA cards are supported. Support for AMD, Intel and Apple cards may happen in the future.
 
 ### Small Icon ###
-- (Viewport) **Active Mode** displays the mode (Object, Edit, Pose, etc.) that the user is currently active in.
+- (Viewport) **Icon Set**: Icon sets dynamically change based on what you're doing inside of Blender.
+  * Active Mode: Displays the icon of the current mode in use (i.e. Object, Edit, Pose)
+  * Active Workspace: Displays the relevant icon of your active workspace. For this to work, your current workspace name needs to be exactly one of the following: `Modeling`, `Sculpting`, `UV Editing`, `Texture Paint`, `Shading`, `Animation`, `Rendering`, `Compositing`, `Geometry Nodes`, `Scripting`
 - (Rendering) **Render Stats** displays render information such as frame resolution and FPS while rendering.
 
 ### Buttons ###
