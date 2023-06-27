@@ -148,8 +148,7 @@ def getFileSize():
     
 def getVersionStr():
     ver = bpy.app.version
-    verC = bpy.app.version_char
-    return f"{ver[0]}.{ver[1]}.{ver[2]}{verC}"
+    return f"{ver[0]}.{ver[1]}.{ver[2]}"
 
 def getRenderEngineStr():
     i = bpy.context.engine
@@ -219,7 +218,8 @@ def updatePresence():
                 gpustr = gpustr.replace("NVIDIA GeForce ","")
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
-            elif gpustr and "Radeon" in gpustr:
+            elif gpustr and "AMD Radeon" in gpustr:
+                gpustr = gpustr.replace("AMD Radeon ","")
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
 
