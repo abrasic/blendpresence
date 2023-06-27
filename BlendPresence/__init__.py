@@ -218,8 +218,7 @@ def updatePresence():
                 gpustr = gpustr.replace("NVIDIA GeForce ","")
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
-            elif gpustr and "AMD Radeon" in gpustr:
-                gpustr = gpustr.replace("AMD Radeon ","")
+            elif gpustr and "Radeon" in gpustr:
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
 
