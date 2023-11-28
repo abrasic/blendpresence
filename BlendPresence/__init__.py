@@ -36,7 +36,7 @@ class bpi:
 
     if bpy.app.version[0] == 2 and bpy.app.version[1] == 93:
         blendGPU = bpy.context.preferences.addons['cycles'].preferences.devices[0].name
-    elif bpy.app.version[0] == 3 and bpy.app.version[1] >= 0:
+    elif bpy.app.version[0] >= 3 and bpy.app.version[1] >= 0:
         blendGPU = gpu.platform.renderer_get()
     else:
         blendGPU = ""
