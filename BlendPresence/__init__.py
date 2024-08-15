@@ -33,6 +33,8 @@ class bpi:
     isRendering = False
     renderedFrames = 0
     timer = 5
+    cycle_iter = 0
+    cycle_time = time.time()
 
     if bpy.app.version[0] == 2 and bpy.app.version[1] == 93:
         blendGPU = bpy.context.preferences.addons['cycles'].preferences.devices[0].name
@@ -113,7 +115,6 @@ def getFramesAnimated():
     if bpy.data.actions:
         ac = [action.frame_range for action in bpy.data.actions]
         k = (sorted(set([item for sublist in ac for item in sublist])))
-        print(k)
         return f"{math.floor(k[-1]):,d} frames animated"
     else:
         return "  "
@@ -126,11 +127,15 @@ def getCurrentFrame():
     return f"{i} {bpy.context.scene.frame_current:,d}"   
 
 def getFileName():
+    prefs = bpy.context.preferences.addons[__name__].preferences
     name = bpy.path.display_name_from_filepath(bpy.data.filepath)
     if name == "":
         return None
     else:
-        return name
+        if prefs.fileNameRegex and re.search(prefs.fileNameRegex, name):
+            return prefs.fileNameFallback
+        else:
+            return name
 
 def readsize(b):
     for u in [' bytes', ' KB', ' MB', ' GB', ' TB']:
@@ -233,7 +238,7 @@ def updatePresence():
                     "OBJECT": ["Object Mode", "object"],
                     "EDIT_": ["Edit Mode", "edit"],
                     "POSE": ["Pose Mode", "pose"],
-                    "SCULPT": ["Sculpt Mode", "sculpt"],
+                    "SCULPT": ["Sculpt Mode", "sculpt_gpencil"],
                     "PAINT_GPENCIL": ["Draw Mode", "paint_gpencil"],
                     "PAINT_TEXTURE": ["Texture Paint Mode", "texture_paint"],
                     "PAINT_VERTEX": ["Vertex Paint Mode", "vertex_paint"],
@@ -290,7 +295,10 @@ def updatePresence():
             if prefs.enableDetails:
                 if prefs.detailsType == "literal":
                     if prefs.displayFileName and getFileName():
-                        detailsText = f"Rendering {getFileName()}.blend"
+                        if prefs.displayDotBlend:
+                            detailsText = f"Rendering {getFileName()}.blend"
+                        else:
+                            detailsText = f"Rendering {getFileName()}"
                     else:
                         detailsText = f"Rendering a project"
                 else:
@@ -313,7 +321,10 @@ def updatePresence():
             if prefs.enableDetails:
                 if prefs.detailsType == "literal":
                     if prefs.displayFileName and getFileName():
-                        detailsText = f"{getFileName()}.blend"
+                        if prefs.displayDotBlend:
+                            detailsText = f"{getFileName()}.blend"
+                        else:
+                            detailsText = f"{getFileName()}"
                     else:
                         detailsText = "Working on a project"
                 else:
@@ -334,10 +345,29 @@ def updatePresence():
                 "size" : getFileSize,
                 "active" : getActiveObject,
             }
+
+            displayCycle = ["custom","scene","obj","poly","bone","mat","frame","anim","size","active"]
         
         if not bpi.isRendering: # Render state will always override this
             try:
-                if prefs.stateType == "custom":
+                if prefs.stateCycle:
+                    now = time.time()
+                    if (now - bpi.cycle_time) > prefs.stateCycleEvery:
+                        bpi.cycle_iter += 1
+                        bpi.cycle_time = now
+                    
+                    if bpi.cycle_iter > len(displayTypes) - 1 :
+                        bpi.cycle_iter = 0
+
+                        if len(prefs.stateCustomText) == 0:
+                            bpi.cycle_iter = 1
+
+                    if bpi.cycle_iter == 0:
+                        stateText = evalCustomText(prefs.stateCustomText)
+                    else:
+                        stateText = displayTypes[displayCycle[bpi.cycle_iter]]()
+
+                elif prefs.stateType == "custom":
                     stateText = evalCustomText(prefs.stateCustomText)
                 else:
                     stateText = displayTypes[prefs.stateType]()
@@ -493,6 +523,24 @@ class blendPresence(bpy.types.AddonPreferences):
         description = "Replace literal string to your .blend file name (ex. 'project.blend'). Your project must be saved to a file in order for this to work",
         default = False,
     )
+
+    displayDotBlend: bpy.props.BoolProperty(
+        name = ".blend",
+        description = "Include .blend extension in file name",
+        default = False,
+    )
+
+    fileNameRegex: bpy.props.StringProperty(
+        name = "Blacklist Regex",
+        description = "Regex expression that if matched with your file name, it will not be displayed",
+        default = "",
+    )
+
+    fileNameFallback: bpy.props.StringProperty(
+        name = "Fallback Name",
+        description = "The name the display will be set to if blacklist is matched",
+        default = "untitled",
+    )
     
     detailsCustomText: bpy.props.StringProperty(
         name = "Custom",
@@ -536,10 +584,18 @@ class blendPresence(bpy.types.AddonPreferences):
         default = "",
     )
 
-    stateDisplayObjects: bpy.props.BoolProperty(
-        name = "Object Count",
-        description = "Displays the number of all objects in the scene",
+    stateCycle: bpy.props.BoolProperty(
+        name = "Cycle",
+        description = "Cycle thru all available types",
         default = False,
+    )
+
+    stateCycleEvery: bpy.props.IntProperty(
+        name = "Cycle Every",
+        description = "Cycle to the next type every x seconds",
+        default = 10,
+        min = 1,
+        max = 999
     )
     
     # TIME ELAPSED
@@ -611,7 +667,13 @@ class blendPresence(bpy.types.AddonPreferences):
                 if prefs.detailsType == "custom":
                     boxDtsSettings.prop(self, "detailsCustomText")
                 if prefs.detailsType == "literal":
-                    boxDtsSettings.prop(self, "displayFileName")
+                    brow = boxDtsSettings.row()
+                    brow.prop(self, "displayFileName")
+                    brow.prop(self, "displayDotBlend")
+                    if prefs.displayFileName:
+                        boxDtsSettings.prop(self, "fileNameRegex")
+                        boxDtsSettings.prop(self, "fileNameFallback")
+                    
             
             # State Text (Middle)
             boxSt = colRight.box()
@@ -625,6 +687,10 @@ class blendPresence(bpy.types.AddonPreferences):
                 
                 if prefs.stateType == "custom":
                     boxStViewSettings.prop(self, "stateCustomText")
+
+                boxStViewSettings.prop(self, "stateCycle")
+                if prefs.stateCycle:
+                    boxStViewSettings.prop(self, "stateCycleEvery")
 
                 boxStViewSettings = boxSt.row().box()
                 boxStViewSettings.label(text="Rendering", icon="RENDER_STILL")

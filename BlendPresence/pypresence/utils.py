@@ -1,12 +1,14 @@
 """Util functions that are needed but messy."""
 import asyncio
 import json
+import os
+import sys
+import tempfile
 import time
 
 from .exceptions import PyPresenceException
 
 
-# Made by https://github.com/LewdNeko ;^)
 def remove_none(d: dict):
     for item in d.copy():
         if isinstance(d[item], dict):
@@ -19,34 +21,36 @@ def remove_none(d: dict):
     return d
 
 
-# Don't call these. Ever.
-def _load_payloads(filename):
-    with open(filename, 'r') as fp:
-        f = fp.read()
+# Returns on first IPC pipe matching Discord's
+def get_ipc_path(pipe=None):
+    ipc = 'discord-ipc-'
+    if pipe:
+        ipc = f"{ipc}{pipe}"
 
-    payloaddict = {}
-    for line in f.splitlines():
-        name, payload = line.split('||')
-        payloaddict[name] = payload
-
-    return payloaddict
-
-
-def _payload_gen(payload_type: str, payload_params: dict):
-    payloads = _load_payloads('pllist.NEKO')  # dont like txt files
-    if payload_type.upper() not in payloads:
-        raise PyPresenceException('Payload type not supported or does not exist.')
-    payload_str = payloads[payload_type]
-    for key, value in payload_params.items():
-        payload_str.replace(";;{0};;".format(key), value)
-
-    payload = json.loads(payload_str)
-    payload["nonce"] = payload["nonce"].format(time.time())
+    if sys.platform in ('linux', 'darwin'):
+        tempdir = (os.environ.get('XDG_RUNTIME_DIR') or tempfile.gettempdir())
+        paths = ['.', 'snap.discord', 'app/com.discordapp.Discord', 'app/com.discordapp.DiscordCanary']
+    elif sys.platform == 'win32':
+        tempdir = r'\\?\pipe'
+        paths = ['.']
+    else:
+        return
+    
+    for path in paths:
+        full_path = os.path.abspath(os.path.join(tempdir, path))
+        if sys.platform == 'win32' or os.path.isdir(full_path):
+            for entry in os.scandir(full_path):
+                if entry.name.startswith(ipc) and os.path.exists(entry):
+                    return entry.path
 
 
-# This code used to do something. I don't know what, though.
-try:  # Thanks, Rapptz :^)
-    create_task = asyncio.ensure_future
-except AttributeError:
-    create_task = getattr(asyncio, "async")
-    # No longer crashes Python 3.7
+def get_event_loop(force_fresh=False):
+    if force_fresh:
+        return asyncio.new_event_loop()
+    try:
+        running = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.new_event_loop()
+    if running.is_closed():
+        return asyncio.new_event_loop()
+    return running
