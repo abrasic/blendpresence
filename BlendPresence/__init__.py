@@ -229,6 +229,9 @@ def updatePresence():
             elif gpustr and "Radeon" in gpustr:
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
+            elif gpustr and "Metal" in gpustr:
+                gpustr = gpustr.split("/", 1)[0]
+                largeIconText = largeIconText + " | " + gpustr
 
         # SMALL ICON
         if prefs.displaySmallIcon:
