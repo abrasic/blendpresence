@@ -40,6 +40,7 @@ class bpi:
         blendGPU = bpy.context.preferences.addons['cycles'].preferences.devices[0].name
     elif bpy.app.version[0] >= 3 and bpy.app.version[1] >= 0:
         blendGPU = gpu.platform.renderer_get()
+        GPUVendor = gpu.platform.vendor_get()
     else:
         blendGPU = ""
         print("[BP] This version of Blender does not support 'Display GPU'.")
@@ -219,6 +220,7 @@ def updatePresence():
 
         if prefs.displayGPU:
             gpustr = bpi.blendGPU
+            vendorstr = bpi.GPUVendor
             if gpustr and "NVIDIA GeForce" in gpustr:
                 gpustr = gpustr.replace("NVIDIA GeForce ","")
                 gpustr = gpustr.split("/", 1)[0]
@@ -229,6 +231,9 @@ def updatePresence():
             elif gpustr and "Radeon" in gpustr:
                 gpustr = gpustr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + gpustr
+            elif vendorstr and "Apple"  in vendorstr:
+                vendorstr = vendorstr.split("/", 1)[0]
+                largeIconText = largeIconText + " | " + vendorstr
 
         # SMALL ICON
         if prefs.displaySmallIcon:
