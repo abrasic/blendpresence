@@ -1,6 +1,14 @@
-import bpy, os, gpu, time, math, re
+import bpy
+import os
+import gpu
+import time
+import math
+import re
+import atexit
+
 from .pypresence import Presence
 from .pypresence import exceptions
+
 
 bl_info = {
     "name": "BlendPresence",
@@ -723,12 +731,35 @@ def register():
     bpy.app.handlers.render_post.append(postRenderHandler)
 
 def unregister():
-    bpi.startTime = time.time()
-    rpcClient.close()
-    bpy.app.timers.unregister(updatePresenceTimer)
+    global rpcClient
+    try:
+        # STOP updates first
+        if bpy.app.timers.is_registered(updatePresenceTimer):
+            bpy.app.timers.unregister(updatePresenceTimer)
+
+        # CLEAR presence explicitly
+        if rpcClient:
+            rpcClient.clear()
+            rpcClient.close()
+
+        bpi.connected = False
+
+    except Exception as e:
+        print("[BP] Shutdown cleanup error:", e)
+
     bpy.utils.unregister_class(blendPresence)
-    
+
     bpy.app.handlers.render_init.remove(startRenderJobHandler)
     bpy.app.handlers.render_complete.remove(endRenderJobHandler)
     bpy.app.handlers.render_cancel.remove(endRenderJobHandler)
     bpy.app.handlers.render_post.remove(postRenderHandler)
+
+
+def force_clear_on_exit():
+    try:
+        rpcClient.clear()
+        rpcClient.close()
+    except:
+        pass
+
+atexit.register(force_clear_on_exit)
