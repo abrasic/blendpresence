@@ -14,7 +14,7 @@ bl_info = {
     "name": "BlendPresence",
     "description": "Discord Rich Presence for Blender",
     "author": "Abrasic",
-    "version": (1, 8, 0),
+    "version": (1, 8, 2),
     "blender": (2, 93, 9),
     "category": "System",
 }
@@ -408,10 +408,12 @@ def updatePresence():
                     large_text=largeIconText,
                     buttons=buttonList
                 )
-            except exceptions.InvalidID or AssertionError:
+            except (exceptions.InvalidID, AssertionError, exceptions.PipeClosed, exceptions.DiscordNotFound) as e:
                 bpi.connected = False
-                print("[BP] I lost connection to Discord RPC! Re-connecting...")
+                print("[BP] RPC Connection Lost: " + str(e))
                 bpi.connected = connectRPC()
+            except exceptions.ServerError as e:
+                print("[BP] ServerError: " + e)
         else:
             print("[BP] Retrying...")
             bpi.connected = connectRPC()
@@ -493,8 +495,9 @@ class blendPresence(bpy.types.AddonPreferences):
     
     button1Label: bpy.props.StringProperty(
         name = "Label",
-        description = "The text displayed on the button",
+        description = "The text displayed on the button. 32 characters max",
         default = "",
+        maxlen = 32,
     )
     
     button1Url: bpy.props.StringProperty(
@@ -505,10 +508,11 @@ class blendPresence(bpy.types.AddonPreferences):
 
     button2Label: bpy.props.StringProperty(
         name = "Label",
-        description = "The text displayed on the button",
+        description = "The text displayed on the button. 32 characters max",
         default = "",
+        maxlen = 32,
     )
- 
+
     button2Url: bpy.props.StringProperty(
         name = "URL",
         description = "The full URL that users will be directed to on click. Example: 'https://google.com'",
@@ -557,8 +561,9 @@ class blendPresence(bpy.types.AddonPreferences):
     
     detailsCustomText: bpy.props.StringProperty(
         name = "Custom",
-        description = "Your custom text goes here. Two characters or longer",
+        description = "Your custom text goes here. 2-128 characters",
         default = "",
+        maxlen = 128,
     )
     
     displayFrames: bpy.props.BoolProperty(
@@ -593,8 +598,9 @@ class blendPresence(bpy.types.AddonPreferences):
 
     stateCustomText: bpy.props.StringProperty(
         name = "Custom",
-        description = "Your custom text goes here. Two characters or longer",
+        description = "Your custom text goes here. 2-128 characters",
         default = "",
+        maxlen = 128,
     )
 
     stateCycle: bpy.props.BoolProperty(
