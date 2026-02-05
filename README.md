@@ -3,15 +3,18 @@ This is an addon for Blender that allows you to show off what you're doing in Di
 
 **BlendPresence currently supports versions 2.93 and higher.**
 <p align="center">
-  <img src="https://i.ibb.co/w07qJfX/Screenshot-2.png" height="300px">
+ <img width="314" height="128" alt="image" src="https://github.com/user-attachments/assets/b3e587d5-642a-432c-8bcc-c03b0a085974" />
+
+  <img width="258" height="116" alt="image" src="https://github.com/user-attachments/assets/c80116c4-7f42-4ef1-8ac2-da349a894a9c" />
 </p>
 
 
 # Features
 
 <p align="center">
-  <img src="https://abx.gg/i/buttons.gif" height="180px">
+  <img width="570" height="201" alt="image" src="https://github.com/user-attachments/assets/1161a231-8a4c-4302-b781-c9a6c0e7209c" />
 </p>
+
 
 * Up to two customizable buttons, redirecting to a link of your choice (portfolio, website, etc)
 * Current Blender version
@@ -29,16 +32,16 @@ This is an addon for Blender that allows you to show off what you're doing in Di
 ## Installation
 
 1. Go to the [Latest Release](../../releases/latest) and download the blendpresence.zip file. DON'T UNZIP IT!
-2. Open Blender, then go to `Edit > Preferences > Add-ons`. Click `Install...` and select the zipfile.
+2. Open Blender, then go to `Edit > Preferences > Add-ons`. Click `Install from Disk...` in the dropdown at the top right and select the zipfile.
 
 ## Updating
 
-1. Select the `BlendPresence` dropdown in the add-ons menu and click `Remove...` - repeat the steps above for the newer version.
+1. Select the `BlendPresence` dropdown in the add-ons menu and click `Uninstall` - repeat the steps above for the newer version.
 
 ## Troubleshooting
 
 If the Rich Presence is not displaying, try the following:
-* In Discord, go to your **User Settings > Activity Privacy > Display current activity as a status message** and make sure it's _enabled_.
+* In Discord, go to your **User Settings > Activity Privacy > Share my activity** and make sure it's _enabled_.
 * It could be a display bug. Refresh the Discord client by pressing `Ctrl+R`
 * It could be a bug with the addon. Try re-enabling it or go to `Window > Toggle System Console` and ensure no errors from BlendPresence appear.
 
@@ -62,6 +65,8 @@ If the Rich Presence is not displaying, try the following:
 - (Rendering) **Render Stats** displays render information such as frame resolution and FPS while rendering.
 
 ### Buttons ###
+> [!NOTE]
+> You cannot see your own RPC buttons. This is a Discord-related issue. To see your buttons, view them on another account.
 - A maximum of two buttons can be displayed at the bottom of your presence and can be personalized with any label and URL of their choosing.
    - **IMPORTANT!** The link MUST start with a protocol (`https://`)!
 
