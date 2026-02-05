@@ -27,7 +27,7 @@ def connectRPC():
     except ConnectionRefusedError:
         print("[BP] Unable to connect: ConnectionRefusedError")
         return False
-    except (FileNotFoundError, AttributeError, exceptions.InvalidPipe, AssertionError):
+    except (FileNotFoundError, AttributeError, exceptions.InvalidPipe, AssertionError, exceptions.DiscordNotFound):
         print("[BP] Unable to connect: Discord client not detected")
         return False
         
@@ -769,3 +769,4 @@ def force_clear_on_exit():
         pass
 
 atexit.register(force_clear_on_exit)
+
