@@ -242,6 +242,9 @@ def updatePresence():
             elif vendorstr and "Apple"  in vendorstr:
                 vendorstr = vendorstr.split("/", 1)[0]
                 largeIconText = largeIconText + " | " + vendorstr
+            elif gpustr and "Intel" in gpustr:
+                gpustr = gpustr.split("/", 1)[0]
+                largeIconText = largeIconText + " | " + gpustr
 
         # SMALL ICON
         if prefs.displaySmallIcon:
