@@ -229,22 +229,24 @@ def updatePresence():
         if prefs.displayGPU:
             gpustr = bpi.blendGPU
             vendorstr = bpi.GPUVendor
+            gpuLabel = None
             if gpustr and "NVIDIA GeForce" in gpustr:
                 gpustr = gpustr.replace("NVIDIA GeForce ","")
-                gpustr = gpustr.split("/", 1)[0]
-                largeIconText = largeIconText + " | " + gpustr
+                gpuLabel = gpustr.split("/", 1)[0]
             elif gpustr and "Quadro" in gpustr:
-                gpustr = gpustr.split("/", 1)[0]
-                largeIconText = largeIconText + " | " + gpustr
+                gpuLabel = gpustr.split("/", 1)[0]
             elif gpustr and "Radeon" in gpustr:
-                gpustr = gpustr.split("/", 1)[0]
-                largeIconText = largeIconText + " | " + gpustr
+                gpuLabel = gpustr.split("/", 1)[0]
             elif vendorstr and "Apple"  in vendorstr:
-                vendorstr = vendorstr.split("/", 1)[0]
-                largeIconText = largeIconText + " | " + vendorstr
+                gpuLabel = vendorstr.split("/", 1)[0]
             elif gpustr and "Intel" in gpustr:
-                gpustr = gpustr.split("/", 1)[0]
-                largeIconText = largeIconText + " | " + gpustr
+                gpuLabel = gpustr.split("/", 1)[0]
+
+            if gpuLabel:
+                if largeIconText:
+                    largeIconText = largeIconText + " | " + gpuLabel
+                else:
+                    largeIconText = gpuLabel
 
         # SMALL ICON
         if prefs.displaySmallIcon:
